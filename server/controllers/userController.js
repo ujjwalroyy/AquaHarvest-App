@@ -1,4 +1,7 @@
 import userModel from "../models/userModel.js";
+import { getDataUri } from "../utils/features.js";
+import cloudinary from 'cloudinary';
+
 
 export const registerController = async (req, res) => {
   try {
@@ -166,8 +169,75 @@ export const updateProfileController = async(req, res) =>{
         console.log(error);
         res.status(500).send({
             success: false,
-            message:'Error In Logout API',
+            message:'Error In update profile API',
             error
         })
+    }
+}
+
+// update user password
+export const updatePasswordController = async (req, res) =>{
+    try {
+      const user = await userModel.findById(req.user._id)
+      const {oldPassword, newPassword} = req.body
+      //validation
+      if(!oldPassword || !newPassword){
+        return res.status(500).send({
+          success: false,
+          message: 'please provide old or new password',
+        })
+      }
+      const isMatch = await user.comparePassword(oldPassword)
+      //validation
+      if(!isMatch){
+        return res.status(500).send({
+          success: false,
+          message: 'Invalid old Password'
+        })
+      }
+      user.password = newPassword
+      await user.save()
+      res.status(200).send({
+        success: true,
+        message: "Password Updated Successfully",
+      })
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({
+          success: false,
+          message:'Error In Logout API',
+          error
+      })
+    }
+}
+
+//Update user profile
+export const updateProfilePic = async(req, res) => {
+    try {
+      const user = await userModel.findById(req.user._id)
+      //get file grom user
+      const file = getDataUri(req.file)
+      //delete prev image
+      await cloudinary.v2.uploader.destroy(user.profilePic.public_id)
+      //update
+      const cdb = await cloudinary.v2.uploader.upload(file.content)
+      user.profilePic = {
+        public_id: cdb.public_id,
+        url: cdb.secure_url
+      }
+      //save
+      await user.save()
+      res.status(200).send({
+        success: true,
+        message: "profile picture updated"
+      })
+
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({
+          success: false,
+          message:'Error In Logout API',
+          error
+      })
     }
 }
