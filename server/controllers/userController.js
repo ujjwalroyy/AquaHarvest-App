@@ -1,58 +1,324 @@
 import userModel from "../models/userModel.js";
 import { getDataUri } from "../utils/features.js";
 import cloudinary from 'cloudinary';
+import TempUserModel from '../utils/TempUserModel.js';
+import crypto from 'crypto';
+import twilio from 'twilio';
+import dotenv from 'dotenv'
+
+dotenv.config();
+
+const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
+const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
+
+const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+
+function generateOTP() {
+  return crypto.randomInt(100000, 999999).toString();
+}
+
+async function sendOTPPhoneNumber(userPhone, otp) {
+  try {
+    const message = await client.messages.create({
+      body: `Your OTP code is ${otp}`,
+      from: TWILIO_PHONE_NUMBER,
+      to: userPhone,
+    });
+    console.log('OTP sent:', message.sid);
+    return message;
+  } catch (error) {
+    console.error('Error sending OTP:', error);
+    throw error;
+  }
+}
 
 
 export const registerController = async (req, res) => {
   try {
-    const { name, email, password, address, city, country, phone } = req.body;
-    if (
-      !name ||
-      !email ||
-      !password ||
-      !address ||
-      !city ||
-      !country ||
-      !phone
-    ) {
-      return res.status(500).send({
+    const { name, email, password, address, city, country, phone, answer } = req.body;
+
+    if (!name || !email || !password || !address || !city || !country || !phone || !answer) {
+      return res.status(400).json({
         success: false,
-        message: "Please Provide All Fields",
+        message: "Please provide all required fields.",
       });
     }
 
-    //existing user
     const existingUser = await userModel.findOne({ email });
     if (existingUser) {
-      return res.status(500).send({
+      return res.status(400).json({
         success: false,
-        message: "email already taken",
+        message: "Email already taken.",
       });
     }
 
-    const user = await userModel.create({
-      name,
-      email,
-      password,
-      address,
-      city,
-      country,
-      phone,
-    });
-    res.status(201).send({
-      success: true,
-      message: "Registration success, please login",
-      user,
-    });
+    const otp = generateOTP();
+
+    try {
+      await sendOTPPhoneNumber(phone, otp);
+      console.log(`OTP sent to ${phone}`);
+
+      await TempUserModel.create({
+        name,
+        email,
+        password,
+        address,
+        city,
+        country,
+        phone,
+        answer,
+        otp,
+        otpExpires: Date.now() + 10 * 60 * 1000, 
+      });
+
+      res.status(201).json({
+        success: true,
+        message: "OTP sent to your phone. Please verify to complete registration.",
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send OTP SMS.",
+        error,
+      });
+    }
   } catch (error) {
-    console.log(error);
-    res.status(500).send({
+    console.error(error);
+    res.status(500).json({
       success: false,
-      message: "Error In Register API",
+      message: "Error in registration process.",
       error,
     });
   }
 };
+
+
+export const verifyOtpController = async (req, res) => {
+  try {
+    const { phone, otp } = req.body;
+
+    if (!phone || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide both phone number and OTP.",
+      });
+    }
+
+    const tempUser = await TempUserModel.findOne({ phone, otp });
+    
+    if (!tempUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP or phone number.",
+      });
+    }
+
+    if (Date.now() > tempUser.otpExpires) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP has expired. Please request a new one.",
+      });
+    }
+
+    const user = await userModel.create({
+      name: tempUser.name,
+      email: tempUser.email,
+      password: tempUser.password,
+      address: tempUser.address,
+      city: tempUser.city,
+      country: tempUser.country,
+      phone: tempUser.phone,
+      answer: tempUser.answer,
+      isVerified: true,
+    });
+
+    await TempUserModel.deleteOne({ phone });
+
+    res.status(200).json({
+      success: true,
+      message: "OTP verified successfully. Registration complete.",
+      user: { phone: user.phone, _id: user._id },
+      
+    });
+  } catch (error) {
+    console.error('Error during OTP verification:', error);
+    res.status(500).json({
+      success: false,
+      message: "Error in OTP verification process.",
+      error,
+    });
+  }
+};
+
+
+
+
+
+// export const registerController = async (req, res) => {
+//   try {
+//     const { name, email, password, address, city, country, phone, answer } = req.body;
+//     if (
+//       !name ||
+//       !email ||
+//       !password ||
+//       !address ||
+//       !city ||
+//       !country ||
+//       !phone ||
+//       !answer
+//     ) {
+//       return res.status(400).send({
+//         success: false,
+//         message: "Please Provide All Fields",
+//       });
+//     }
+
+//     const existingUser = await userModel.findOne({ email });
+//     if (existingUser) {
+//       return res.status(400).send({
+//         success: false,
+//         message: "Email already taken",
+//       });
+//     }
+
+//     const otp = generateOTP();
+
+//     try {
+//       await sendOTPEmail(email, otp);
+//       console.log(`OTP sent to ${email}`);
+//     } catch (error) {
+//       return res.status(500).send({
+//         success: false,
+//         message: "Failed to send OTP email",
+//         error,
+//       });
+//     }
+
+//     const user = await userModel.create({
+//       name,
+//       email,
+//       password,
+//       address,
+//       city,
+//       country,
+//       phone,
+//       answer,
+//       otp, 
+//       otpExpires: Date.now() + 10 * 60 * 1000 
+//     });
+
+//     res.status(201).send({
+//       success: true,
+//       message: "OTP sent to your email. Please verify to complete registration.",
+//       user: { email: user.email, _id: user._id }, 
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({
+//       success: false,
+//       message: "Error In Register API",
+//       error,
+//     });
+//   }
+// };
+
+// export const verifyOtpController = async (req, res) => {
+//   try {
+//     const { email, otp } = req.body;
+//     if (!email || !otp) {
+//       return res.status(400).send({
+//         success: false,
+//         message: "Please provide email and OTP",
+//       });
+//     }
+
+//     const user = await userModel.findOne({ email, otp });
+//     if (!user) {
+//       return res.status(400).send({
+//         success: false,
+//         message: "Invalid OTP or email",
+//       });
+//     }
+
+//     if (Date.now() > user.otpExpires) {
+//       return res.status(400).send({
+//         success: false,
+//         message: "OTP has expired. Please register again.",
+//       });
+//     }
+
+//     user.otp = undefined;
+//     user.otpExpires = undefined;
+//     await user.save();
+
+//     res.status(200).send({
+//       success: true,
+//       message: "OTP verified successfully. Registration complete.",
+//       user,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({
+//       success: false,
+//       message: "Error In OTP Verification",
+//       error,
+//     });
+//   }
+// };
+
+
+// export const registerController = async (req, res) => {
+//   try {
+//     const { name, email, password, address, city, country, phone, answer } = req.body;
+//     if (
+//       !name ||
+//       !email ||
+//       !password ||
+//       !address ||
+//       !city ||
+//       !country ||
+//       !phone || !answer
+//     ) {
+//       return res.status(500).send({
+//         success: false,
+//         message: "Please Provide All Fields",
+//       });
+//     }
+
+//     //existing user
+//     const existingUser = await userModel.findOne({ email });
+//     if (existingUser) {
+//       return res.status(500).send({
+//         success: false,
+//         message: "email already taken",
+//       });
+//     }
+
+//     const user = await userModel.create({
+//       name,
+//       email,
+//       password,
+//       address,
+//       city,
+//       country,
+//       phone,
+//       answer
+//     });
+//     res.status(201).send({
+//       success: true,
+//       message: "Registration success, please login",
+//       user,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({
+//       success: false,
+//       message: "Error In Register API",
+//       error,
+//     });
+//   }
+// };
 
 export const loginController = async (req, res) => {
   try {
@@ -241,3 +507,36 @@ export const updateProfilePic = async(req, res) => {
       })
     }
 }
+
+export const passwordResetController = async(req, res) => {
+  try {
+    const {email, newPassword, answer} = req.body
+    if(!email || ! newPassword || !answer){
+      return res.status(500).send({
+        success: false,
+        message: 'Please Provide all field'
+      })
+    }
+    const user = await userModel.findOne({email, answer})
+    if(!user){
+      return res.status(404).send({
+        success:false,
+        message:'Invalid user or answer'
+      })
+    }
+    user.password = newPassword
+    await user.save()
+    res.status(200).send({
+      success:true,
+      message:"Your password has been reset please login"
+    })
+  } catch (error) {
+    console.log(error);
+      res.status(500).send({
+          success: false,
+          message:'Error In password reset API',
+          error
+      })
+  }
+}
+

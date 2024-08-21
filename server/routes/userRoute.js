@@ -1,29 +1,36 @@
-import express from 'express'
-import { getUserProfileController, loginController, logoutController, registerController, updatePasswordController, updateProfileController, updateProfilePic } from '../controllers/userController.js'
-import { isAuth } from '../middlewares/auth.js'
-import { singleUpload } from '../middlewares/multer.js'
+import express from 'express';
+import { 
+  getUserProfileController, 
+  loginController, 
+  logoutController, 
+  passwordResetController, 
+  registerController, 
+  updatePasswordController, 
+  updateProfileController, 
+  updateProfilePic, 
+  verifyOtpController 
+} from '../controllers/userController.js';
+import { isAuth } from '../middlewares/auth.js';
+import { singleUpload } from '../middlewares/multer.js';
 
-const router = express.Router()
+const router = express.Router();
 
-//register
-router.post('/register', registerController)
+router.post('/register', registerController);
 
-//login
-router.post('/login', loginController)
+router.post('/register/verify', verifyOtpController);
 
-//profile
-router.get('/profile', isAuth, getUserProfileController)
+router.post('/login', loginController);
 
-//logout
-router.get('/logout', isAuth, logoutController)
+router.get('/profile', isAuth, getUserProfileController);
 
-//updateProfile
-router.put('/profile-update', isAuth, updateProfileController)
+router.get('/logout', isAuth, logoutController);
 
-//updatePassword
-router.put('/update-password', isAuth, updatePasswordController)
+router.put('/profile-update', isAuth, updateProfileController);
 
-//updateProfilePic
-router.put('/profile-picture', isAuth, singleUpload, updateProfilePic)
+router.put('/update-password', isAuth, updatePasswordController);
 
-export default router
+router.put('/profile-picture', isAuth, singleUpload, updateProfilePic);
+
+router.get('/reset-password', passwordResetController);
+
+export default router;

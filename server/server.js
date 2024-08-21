@@ -40,6 +40,7 @@ app.use('/api/v1', test1)
 app.use('/api/v1/user', userRoutes)
 app.use('/api/v1/product', productRoutes)
 app.use('/api/v1/cat', categoryRoutes)
+// app.use('/api/user', routers)
 
 
 app.get('/', (req, res) =>{
