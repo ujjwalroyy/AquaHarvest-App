@@ -5,6 +5,7 @@ import TempUserModel from '../utils/TempUserModel.js';
 import crypto from 'crypto';
 import twilio from 'twilio';
 import dotenv from 'dotenv'
+import passport from '../config/auth.js'
 
 dotenv.config();
 
@@ -151,8 +152,24 @@ export const verifyOtpController = async (req, res) => {
   }
 };
 
+export const googleAuthController = (req, res, next) => {
+  console.log('Initiating OAuth request');
+  passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+};
 
+export const googleAuthCallbackController = (req, res, next) => {
+  passport.authenticate('google', { failureRedirect: '/' })(req, res, () => {
+    console.log('User authenticated successfully:', req.user); 
+    res.redirect('/'); 
+  });
+};
 
+export const googleLogoutController = (req, res) => {
+  req.logout((err) => {
+    if (err) return next(err); 
+    res.redirect('/'); 
+  });
+};
 
 
 // export const registerController = async (req, res) => {
