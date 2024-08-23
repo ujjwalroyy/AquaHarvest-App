@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import twilio from 'twilio';
 import dotenv from 'dotenv'
 import passport from '../config/auth.js'
+import TempOtpModel from "../utils/TempOtp.js";
 
 dotenv.config();
 
@@ -18,6 +19,52 @@ const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 function generateOTP() {
   return crypto.randomInt(100000, 999999).toString();
 }
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { phone } = req.body;
+
+    if (!phone) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a phone number",
+      });
+    }
+
+    const otp = generateOTP();
+    console.log("Generated OTP: ", otp);
+
+    try {
+      await sendOTPPhoneNumber(phone, otp);
+      console.log(`OTP sent to ${phone}`);
+
+      await TempOtpModel.create({
+        phone,
+        otp,
+        otpExpires: Date.now() + 10 * 60 * 1000,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: "OTP sent successfully",
+      });
+    } catch (error) {
+      console.error('Failed to send OTP SMS:', error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send OTP SMS.",
+        error: error.message,
+      });
+    }
+  } catch (error) {
+    console.error('Error in reset password process:', error);
+    res.status(500).json({
+      success: false,
+      message: "Error in reset password process.",
+      error: error.message,
+    });
+  }
+};
 
 async function sendOTPPhoneNumber(userPhone, otp) {
   try {
@@ -37,9 +84,9 @@ async function sendOTPPhoneNumber(userPhone, otp) {
 
 export const registerController = async (req, res) => {
   try {
-    const { name, email, password, address, city, country, phone, answer } = req.body;
-
-    if (!name || !email || !password || !address || !city || !country || !phone || !answer) {
+    const { name, email, password, phone } = req.body;
+    
+    if (!name || !email || !password || !phone) {
       return res.status(400).json({
         success: false,
         message: "Please provide all required fields.",
@@ -55,6 +102,7 @@ export const registerController = async (req, res) => {
     }
 
     const otp = generateOTP();
+    console.log("generate otp: ", otp)
 
     try {
       await sendOTPPhoneNumber(phone, otp);
@@ -64,16 +112,12 @@ export const registerController = async (req, res) => {
         name,
         email,
         password,
-        address,
-        city,
-        country,
         phone,
-        answer,
         otp,
         otpExpires: Date.now() + 10 * 60 * 1000, 
       });
 
-      res.status(201).json({
+      res.status(200).json({
         success: true,
         message: "OTP sent to your phone. Please verify to complete registration.",
       });
@@ -90,6 +134,62 @@ export const registerController = async (req, res) => {
       success: false,
       message: "Error in registration process.",
       error,
+    });
+  }
+};
+
+export const verifyForgetOtpController = async (req, res) => {
+  try {
+    const { phone, otp } = req.body;
+
+    if (!phone || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide both phone number and OTP.",
+      });
+    }
+
+    // Find the temporary OTP record
+    const tempOtp = await TempOtpModel.findOne({ phone, otp });
+
+    if (!tempOtp) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP or phone number.",
+      });
+    }
+
+    if (Date.now() > tempOtp.otpExpires) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP has expired. Please request a new one.",
+      });
+    }
+
+    // Optionally, you can find and delete the user from TempUserModel if needed
+    await TempUserModel.deleteOne({ phone });
+
+    // Find the existing user
+    const existingUser = await userModel.findOne({ phone });
+
+    if (!existingUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "OTP verified successfully.",
+      user: { phone: existingUser.phone, _id: existingUser._id },
+    });
+  } catch (error) {
+    console.error('Error during OTP verification:', error);
+    res.status(500).json({
+      success: false,
+      message: "Error in OTP verification process.",
+      error: error.message,
     });
   }
 };
@@ -122,21 +222,29 @@ export const verifyOtpController = async (req, res) => {
       });
     }
 
+    const existingUser = await userModel.findOne({ email: tempUser.email, phone:tempUser.phone });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User with this email already exists.",
+      });
+    }
+
     const user = await userModel.create({
       name: tempUser.name,
       email: tempUser.email,
       password: tempUser.password,
-      address: tempUser.address,
-      city: tempUser.city,
-      country: tempUser.country,
+      // address: tempUser.address,
+      // city: tempUser.city,
+      // country: tempUser.country,
       phone: tempUser.phone,
-      answer: tempUser.answer,
+      // answer: tempUser.answer,
       isVerified: true,
     });
 
     await TempUserModel.deleteOne({ phone });
 
-    res.status(200).json({
+    res.status(201).json({
       success: true,
       message: "OTP verified successfully. Registration complete.",
       user: { phone: user.phone, _id: user._id },
@@ -153,14 +261,12 @@ export const verifyOtpController = async (req, res) => {
 };
 
 export const googleAuthController = (req, res, next) => {
-  console.log('Initiating OAuth request');
   passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
 };
 
 export const googleAuthCallbackController = (req, res, next) => {
   passport.authenticate('google', { failureRedirect: '/' })(req, res, () => {
-    console.log('User authenticated successfully:', req.user); 
-    res.redirect('/'); 
+    res.redirect('/profile'); 
   });
 };
 
@@ -340,6 +446,9 @@ export const googleLogoutController = (req, res) => {
 export const loginController = async (req, res) => {
   try {
     const { email, password } = req.body;
+   
+    
+    
     if (!email || !password) {
       return res.status(500).send({
         success: false,
@@ -353,7 +462,6 @@ export const loginController = async (req, res) => {
         message: "User not found",
       });
     }
-    //check password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(500).send({
@@ -385,6 +493,8 @@ export const loginController = async (req, res) => {
     });
   }
 };
+
+
 
 
 //Get user profile

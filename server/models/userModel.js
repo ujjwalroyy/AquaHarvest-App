@@ -20,14 +20,15 @@ const userSchema = new mongoose.Schema(
     },
     city: {
       type: String,
-      required: [true, "city name is required"],
+      // required: [true, "city name is required"],
     },
     country: {
       type: String,
-      required: [true, "country name is required"],
+      // required: [true, "country name is required"],
     },
     phone: {
       type: String,
+      unique: [true, "phone number is already taken"],
       required: [true, "phone no is required"],
     },
     profilePic: {
@@ -40,7 +41,6 @@ const userSchema = new mongoose.Schema(
     },
     answer:{
       type: String,
-      required:[true, "answer is required"]
     },
     isVerified: {
       type: Boolean,

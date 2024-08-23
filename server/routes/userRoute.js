@@ -5,6 +5,7 @@ import {
   logoutController, 
   passwordResetController, 
   registerController, 
+  resetPassword, 
   updatePasswordController, 
   updateProfileController, 
   updateProfilePic, 
@@ -32,5 +33,9 @@ router.put('/update-password', isAuth, updatePasswordController);
 router.put('/profile-picture', isAuth, singleUpload, updateProfilePic);
 
 router.get('/reset-password', passwordResetController);
+
+router.post('/send-otp', resetPassword);
+
+router.post('/verify-forgot-otp')
 
 export default router;

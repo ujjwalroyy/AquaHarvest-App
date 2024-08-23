@@ -14,26 +14,26 @@ const tempUserSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  address: {
-    type: String,
-    required: true,
-  },
-  city: {
-    type: String,
-    required: true,
-  },
-  country: {
-    type: String,
-    required: true,
-  },
+  // address: {
+  //   type: String,
+  //   required: true,
+  // },
+  // city: {
+  //   type: String,
+  //   required: true,
+  // },
+  // country: {
+  //   type: String,
+  //   required: true,
+  // },
   phone: {
     type: String,
     required: true,
   },
-  answer: {
-    type: String,
-    required: true,
-  },
+  // answer: {
+  //   type: String,
+  //   required: true,
+  // },
   otp: {
     type: String,
     required: true,
