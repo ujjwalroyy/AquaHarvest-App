@@ -40,6 +40,8 @@ app.use(
       cookie: { secure: false }
     })
   );
+
+
   app.use(passport.initialize());
   app.use(passport.session());
 
@@ -53,11 +55,11 @@ app.use("/api/v1", test1);
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/product", productRoutes);
 app.use("/api/v1/cat", categoryRoutes);
-app.use('/api/v1', authRoute);
+app.use('/', authRoute);
 
-app.get("/", (req, res) => {
-  return res.status(200).send("<h1> Welcome to server<h1/>");
-}); //root
+// app.get("/", (req, res) => {
+//   return res.status(200).send("<h1> Welcome to server<h1/>");
+// }); //root
 
 app.use((err, req, res, next) => {
     console.error(err.stack);

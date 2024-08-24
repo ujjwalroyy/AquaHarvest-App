@@ -277,6 +277,59 @@ export const googleLogoutController = (req, res) => {
   });
 };
 
+export const loginController = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Please add email and password.",
+      });
+    }
+
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid credentials.",
+      });
+    }
+
+    const token = user.generateToken();
+    res
+      .status(200)
+      .cookie("token", token, {
+        expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+        secure: process.env.NODE_ENV === "production", // Set secure cookies in production
+        httpOnly: true,
+        sameSite: 'strict',
+      })
+      .json({
+        success: true,
+        message: "Login successful.",
+        token,
+        user,
+      });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error in login API.",
+      error: error.message,
+    });
+  }
+};
+
+
 
 // export const registerController = async (req, res) => {
 //   try {
@@ -443,56 +496,56 @@ export const googleLogoutController = (req, res) => {
 //   }
 // };
 
-export const loginController = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+
+
+// export const loginController = async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
    
-    
-    
-    if (!email || !password) {
-      return res.status(500).send({
-        success: false,
-        message: "Please Add Email or Password",
-      });
-    }
-    const user = await userModel.findOne({ email });
-    if (!user) {
-      return res.status(404).send({
-        success: false,
-        message: "User not found",
-      });
-    }
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(500).send({
-        success: false,
-        message: "invalid credentials",
-      });
-    }
-    const token = user.generateToken();
-    res
-      .status(200)
-      .cookie("token", token, {
-        expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-        secure:process.env.NODE_ENV === "development"?true:false,
-        httpOnly:process.env.NODE_ENV === "development"?true:false,
-        sameSite:process.env.NODE_ENV === "development"?true:false,
-      })
-      .send({
-        success: true,
-        message: "Login Successfully",
-        token,
-        user,
-      });
-  } catch (error) {
-    console.log(error);
-    res.status(500).send({
-      success: "false",
-      message: "Error In Login Api",
-      error,
-    });
-  }
-};
+//     if (!email || !password) {
+//       return res.status(400).send({
+//         success: false,
+//         message: "Please Add Email or Password",
+//       });
+//     }
+//     const user = await userModel.findOne({email });
+//     if (!user) {
+//       return res.status(404).send({
+//         success: false,
+//         message: "User not found",
+//       });
+//     }
+//     const isMatch = await user.comparePassword(password);
+//     if (!isMatch) {
+//       return res.status(400).send({
+//         success: false,
+//         message: "invalid credentials",
+//       });
+//     }
+//     const token = user.generateToken();
+//     res
+//       .status(200)
+//       .cookie("token", token, {
+//         expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+//         secure:process.env.NODE_ENV === "development"?true:false,
+//         httpOnly: true,
+//         sameSite: 'strict',
+//       })
+//       .send({
+//         success: true,
+//         message: "Login Successfully",
+//         token,
+//         user,
+//       });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({
+//       success: "false",
+//       message: "Error In Login Api",
+//       error,
+//     });
+//   }
+// };
 
 
 
@@ -611,7 +664,10 @@ export const updateProfilePic = async(req, res) => {
       //get file grom user
       const file = getDataUri(req.file)
       //delete prev image
-      await cloudinary.v2.uploader.destroy(user.profilePic.public_id)
+      if (user.profilePic && user.profilePic.public_id) {
+        await cloudinary.v2.uploader.destroy(user.profilePic.public_id);
+      }
+      // await cloudinary.v2.uploader.destroy(user.profilePic.public_id)
       //update
       const cdb = await cloudinary.v2.uploader.upload(file.content)
       user.profilePic = {
@@ -646,7 +702,7 @@ export const passwordResetController = async(req, res) => {
     }
     const user = await userModel.findOne({email, answer})
     if(!user){
-      return res.status(404).send({
+      return res.status(400).send({
         success:false,
         message:'Invalid user or answer'
       })

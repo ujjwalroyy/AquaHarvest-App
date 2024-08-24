@@ -9,6 +9,7 @@ import {
   updatePasswordController, 
   updateProfileController, 
   updateProfilePic, 
+  verifyForgetOtpController, 
   verifyOtpController 
 } from '../controllers/userController.js';
 import { isAuth } from '../middlewares/auth.js';
@@ -20,7 +21,7 @@ router.post('/register', registerController);
 
 router.post('/register/verify', verifyOtpController);
 
-router.post('/login', loginController);
+router.post('/signin', loginController);
 
 router.get('/profile', isAuth, getUserProfileController);
 
@@ -36,6 +37,6 @@ router.get('/reset-password', passwordResetController);
 
 router.post('/send-otp', resetPassword);
 
-router.post('/verify-forgot-otp')
+router.post('/verify-forgot-otp', verifyForgetOtpController)
 
 export default router;
