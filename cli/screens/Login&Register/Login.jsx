@@ -112,7 +112,7 @@ function LoginPage() {
 
   const handleGoogleLogin = async () => {
     try {
-      const backendUrl = 'http://192.168.43.61:5050/auth/google'; // Correct URL
+      const backendUrl = 'http://192.168.43.60:5050/auth/google'; // Correct URL
       
       // Open the Google login page in the browser
       await Linking.openURL(backendUrl);
