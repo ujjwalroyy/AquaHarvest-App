@@ -51,20 +51,22 @@ import authRoute from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoute.js";
 import productRoutes from "./routes/productRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
+import protectedRoutes from "./routes/protectedRoutes.js";
 app.use("/api/v1", test1);
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/product", productRoutes);
 app.use("/api/v1/cat", categoryRoutes);
-app.use('/', authRoute);
+app.use('/auth', authRoute);
+app.use('/api', protectedRoutes);
 
 // app.get("/", (req, res) => {
 //   return res.status(200).send("<h1> Welcome to server<h1/>");
 // }); //root
 
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).send('Something broke!');
-  });
+// app.use((err, req, res, next) => {
+//     console.error(err.stack);
+//     res.status(500).send('Something broke!');
+//   });
 
 const PORT = process.env.PORT || 5050;
 

@@ -4,10 +4,6 @@ import JWT from "jsonwebtoken";
 
 const userSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: [true, "name is required"],
-    },
     email: {
       type: String,
       required: [true, "email is required"],
@@ -35,16 +31,16 @@ const userSchema = new mongoose.Schema(
       public_id: {
         type: String,
       },
-      url:{
+      url: {
         type: String,
-      }
+      },
     },
-    answer:{
+    answer: {
       type: String,
     },
     isVerified: {
       type: Boolean,
-      default: false
+      default: false,
     },
     otp: {
       type: String,

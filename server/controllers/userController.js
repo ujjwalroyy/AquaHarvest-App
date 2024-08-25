@@ -264,9 +264,28 @@ export const googleAuthController = (req, res, next) => {
   passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
 };
 
-export const googleAuthCallbackController = (req, res, next) => {
-  passport.authenticate('google', { failureRedirect: '/' })(req, res, () => {
-    res.redirect('/profile'); 
+export const googleAuthCallbackController = async (req, res, next) => {
+  passport.authenticate('google', { failureRedirect: '/' })(req, res, async () => {
+    try {
+      const user = req.user;
+
+      let existingUser = await User.findOne({ googleId: user.id });
+      if (!existingUser) {
+        existingUser = new User({
+          googleId: user.id,
+          email: user.emails[0].value,
+          name: user.displayName
+        });
+        await existingUser.save();
+      }
+
+      // Start a session or issue a token
+      // const token = generateToken(existingUser); 
+
+      res.redirect('/profile'); 
+    } catch (error) {
+      next(error);
+    }
   });
 };
 
@@ -573,13 +592,14 @@ export const getUserProfileController = async(req, res) => {
 
 //logout
 export const logoutController = async (req, res) =>{
+  console.log('Logout request:', req.body);
     try {
         res.status(200).cookie("token", "", {
             expires: new Date(Date.now()),
-            secure:process.env.NODE_ENV === "development"?true:false,
-            httpOnly:process.env.NODE_ENV === "development"?true:false,
-            sameSite:process.env.NODE_ENV === "development"?true:false,
-          }).send({
+            secure: process.env.NODE_ENV === "production", // Set secure cookies in production
+            httpOnly: true,
+        sameSite: 'strict',
+          }).json({
             success:true,
             message:"Logout Successfully"
           })

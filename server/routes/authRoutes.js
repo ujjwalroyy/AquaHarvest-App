@@ -1,24 +1,17 @@
 import express from 'express';
-import { googleAuthController, googleAuthCallbackController, googleLogoutController } from '../controllers/userController.js';
-import '../config/auth.js'
+import {
+  googleAuthController,
+  googleAuthCallbackController,
+  googleLogoutController
+} from '../controllers/authController.js';
+
+
 const router = express.Router();
-import passport from 'passport'
-import { failureGoogleLogin, successGoogleLogin } from '../controllers/authController.js';
 
+router.get('/google', googleAuthController);
 
+router.get('/google/callback', googleAuthCallbackController);
 
-router.get('/auth/google', passport.authenticate('google', {scope: ['email', 'profile']}))
-
-router.get('/auth/google/callback', passport.authenticate('google', {
-    successRedirect:'/success',
-    failureRedirect:'/failure'
-}))
-
-router.get('/success', successGoogleLogin)
-
-router.get('/failure', failureGoogleLogin)
-
+router.get('/logout', googleLogoutController);
 
 export default router;
-
-

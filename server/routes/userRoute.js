@@ -25,7 +25,7 @@ router.post('/signin', loginController);
 
 router.get('/profile', isAuth, getUserProfileController);
 
-router.get('/logout', isAuth, logoutController);
+router.post('/logout', isAuth, logoutController);
 
 router.put('/profile-update', isAuth, updateProfileController);
 

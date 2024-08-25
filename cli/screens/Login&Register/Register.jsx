@@ -17,6 +17,7 @@ import Error from "react-native-vector-icons/AntDesign";
 import Feather from "react-native-vector-icons/Feather";
 import axios from "axios";
 import styles from "./style.js";
+import Toast from "react-native-toast-message";
 
 const { width, height } = Dimensions.get('window');
 const themeColors = { bg: '#B6E6FC' };
@@ -54,7 +55,13 @@ const RegisterPage = () => {
           Alert.alert("Registration Error", "Something went wrong. Please try again.");
         });
     } else {
-      Alert.alert("Incomplete Form", "Please fill all mandatory fields correctly.");
+      // Alert.alert("Incomplete Form", "Please fill all mandatory fields correctly.");
+      Toast.show({
+        type: 'error',
+        text1: 'Error!!',
+        text2: 'Fill mandatory details',
+        visibilityTime: 5000
+      })
     }
   };
 

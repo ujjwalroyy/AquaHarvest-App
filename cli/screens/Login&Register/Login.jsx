@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -9,7 +9,8 @@ import {
   Alert,
   Modal,
   Dimensions,
-  Linking
+  Linking,
+  
 } from "react-native";
 import Fontisto from "react-native-vector-icons/Fontisto";
 import FontAwesome from "react-native-vector-icons/FontAwesome5";
@@ -42,10 +43,12 @@ function LoginPage() {
 
       axios.post("http://192.168.43.60:5050/api/v1/user/signin", userData)
         .then(res => {
-          console.log(res.data);
+          console.log('data ' ,res.data);
           if (res.data.success) {
             Alert.alert("Success", "Login successful!");
-            navigation.navigate('Home'); 
+            AsyncStorage.setItem('token', res.data.data)
+            AsyncStorage.setItem('isLoggedIn', JSON.stringify(true))
+            navigation.navigate('Continue', { screen: 'Home' }); 
           } else {
             Alert.alert("Error", res.data.message || "Login failed. Please try again.");
           }
@@ -67,8 +70,9 @@ function LoginPage() {
 
   const handleSubmitOtp = () => {
     if (otp.length === 6) {
-      // Implement OTP verification logic here
-      console.log('Verifying OTP:', otp);
+      verifyOtp(phone, otp)
+      Alert.alert('Otp Verified');
+      console.log('Otp Verified:', otp);
       setOtpModalVisible(false);
     } else {
       Alert.alert('Invalid OTP', 'Please enter a valid 6-digit OTP.');
@@ -99,7 +103,7 @@ function LoginPage() {
         const response = await axios.post('http://192.168.43.60:5050/api/v1/user/send-otp', {
           phone: phone,
         });
-
+        Alert.alert('OTP sent successfully');
         console.log('OTP sent successfully:', response.data);
       } catch (error) {
         console.error('Error sending OTP:', error);
@@ -112,23 +116,61 @@ function LoginPage() {
 
   const handleGoogleLogin = async () => {
     try {
-      const backendUrl = 'http://192.168.43.60:5050/auth/google'; // Correct URL
-      
-      // Open the Google login page in the browser
+      const backendUrl = 'http://192.168.43.60:5050/auth/google'; 
       await Linking.openURL(backendUrl);
-      
-      // Assuming you handle the response appropriately
-      // Example code:
-      // const response = await fetch(backendUrl);
-      // const data = await response.json();
-      // await AsyncStorage.setItem('userToken', data.token);
-
-      // navigation.navigate('HomeScreen');
     } catch (error) {
       console.error('Google login failed:', error);
       Alert.alert('Login Error', 'Unable to login with Google. Please try again later.');
     }
   };
+
+  const handleRedirect = async (event) => {
+    if (event.url) {
+      const { queryParams } = Linking.parse(event.url);
+      const code = queryParams['code'];
+
+      if (code) {
+        try {
+          const response = await axios.get(`http://localhost:5050/auth/google/callback`, {
+            params: { code }
+          });
+          
+          const { token } = response.data;
+
+          await AsyncStorage.setItem('token', token);
+
+          navigation.navigate('HomeScreen');
+        } catch (error) {
+          console.error('Error handling callback:', error);
+          Alert.alert('Error', 'Unable to handle Google login callback. Please try again.');
+        }
+      }
+    }
+  };
+  useEffect(() => {
+    // Set up URL listener
+    const subscription = Linking.addEventListener('url', handleRedirect);
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+
+  // const checkToken = async () => {
+  //   try {
+  //     const token = await AsyncStorage.getItem('token');
+  //     if (token) {
+  //       // Token exists, proceed to authenticated area
+  //       console.log('Token:', token);
+  //     } else {
+  //       // No token, redirect to login
+  //       console.log('No token found');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error checking token:', error);
+  //   }
+  // };
 
   function handleEmail(e) {
     const emailVar = e.nativeEvent.text;

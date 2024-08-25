@@ -33,7 +33,7 @@ const WelcomeScreen = () => {
             <Text style={tw`text-white font-semibold`}>
               Create an account?
             </Text>
-            <TouchableOpacity onPress={()=> navigation.navigate('Signup')}>
+            <TouchableOpacity onPress={()=> navigation.navigate('Register')}>
               <Text style={tw`font-semibold text-red-400`}>
                 Sign Up
               </Text>
