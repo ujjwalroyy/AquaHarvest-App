@@ -18,6 +18,7 @@ import Feather from "react-native-vector-icons/Feather";
 import axios from "axios";
 import styles from "./style.js";
 import Toast from "react-native-toast-message";
+// import {RadioButton} from 'react-native-paper'
 
 const { width, height } = Dimensions.get('window');
 const themeColors = { bg: '#B6E6FC' };
@@ -123,6 +124,18 @@ const RegisterPage = () => {
         </View>
         <View style={styles.loginContainer}>
           <Text style={styles.text_header}>Register</Text>
+
+          {/* <Viwe style={styles.radioButton_dev}>
+            <Text style={styles.text_header}>Login as</Text>
+            <Viwe style={styles.radioButton_inner_div}>
+              <Text style={styles.radioButton_text}>User</Text>
+              <RadioButton value="User" />
+            </Viwe>
+            <Viwe style={styles.radioButton_inner_div}>
+              <Text style={styles.radioButton_text}>User</Text>
+              <RadioButton value="User" />
+            </Viwe>
+          </Viwe> */}
           
           <View style={styles.action}>
             <FontAwesome name="user" color="#420475" style={styles.smallIcon} />
@@ -134,7 +147,7 @@ const RegisterPage = () => {
             {nameVerify && <Feather name="check-circle" color="green" size={20} />}
             {!nameVerify && name.length > 2 && <Error name="warning" color="red" size={20} />}
           </View>
-          {name.length <= 2 && !nameVerify && (
+          {name.length <= 2 ? null : !nameVerify && (
             <Text style={{ marginLeft: 20, color: "red" }}>Name should be more than 2 characters</Text>
           )}
 
@@ -148,7 +161,7 @@ const RegisterPage = () => {
             {emailVerify && <Feather name="check-circle" color="green" size={20} />}
             {!emailVerify && email.length > 2 && <Error name="warning" color="red" size={20} />}
           </View>
-          {email.length <= 2 && !emailVerify && (
+          {email.length <= 2 ? null : !emailVerify && (
             <Text style={{ marginLeft: 20, color: "red" }}>Please enter a valid email</Text>
           )}
 
@@ -163,7 +176,7 @@ const RegisterPage = () => {
             {phoneVerify && <Feather name="check-circle" color="green" size={20} />}
             {!phoneVerify && phone.length > 2 && <Error name="warning" color="red" size={20} />}
           </View>
-          {phone.length <= 2 && !phoneVerify && (
+          {phone.length <= 2 ? null : !phoneVerify && (
             <Text style={{ marginLeft: 20, color: "red" }}>Phone number should start with 6-9 and be followed by 9 digits</Text>
           )}
 
@@ -177,7 +190,7 @@ const RegisterPage = () => {
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
               <Feather
-                name={showPassword ? "eye" : "eye-off"}
+                name={password.length <= 2 ? null : showPassword ? "eye" : "eye-off"}
                 style={{ marginRight: -10 }}
                 color={password ? "green" : "red"}
                 size={23}

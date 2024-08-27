@@ -46,8 +46,10 @@ function LoginPage() {
           console.log('data ' ,res.data);
           if (res.data.success) {
             Alert.alert("Success", "Login successful!");
-            AsyncStorage.setItem('token', res.data.data)
+            AsyncStorage.setItem('token', res.data.token)
+            
             AsyncStorage.setItem('isLoggedIn', JSON.stringify(true))
+             
             navigation.navigate('Continue', { screen: 'Home' }); 
           } else {
             Alert.alert("Error", res.data.message || "Login failed. Please try again.");
@@ -131,7 +133,7 @@ function LoginPage() {
 
       if (code) {
         try {
-          const response = await axios.get(`http://localhost:5050/auth/google/callback`, {
+          const response = await axios.get(`http://192.168.43.60:5050/auth/google/callback`, {
             params: { code }
           });
           
@@ -243,7 +245,7 @@ function LoginPage() {
             </Text>
           )}
 
-          <View style={styles.action}>
+<View style={styles.action}>
             <FontAwesome name="lock" color="#420475" style={styles.smallIcon} />
             <TextInput
               placeholder="Password"
@@ -254,7 +256,7 @@ function LoginPage() {
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
               <Feather
-                name={showPassword ? "eye" : "eye-off"}
+                name={password.length <= 2 ? null : showPassword ? "eye" : "eye-off"}
                 style={{ marginRight: -9 }}
                 color={passwordVerify ? "green" : "red"}
                 size={23}

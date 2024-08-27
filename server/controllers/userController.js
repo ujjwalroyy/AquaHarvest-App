@@ -618,14 +618,23 @@ export const logoutController = async (req, res) =>{
 export const updateProfileController = async(req, res) =>{
     try {
         const user = await userModel.findById(req.user._id)
-        const {name, email, address, city, country, phone} = req.body
+        console.log("UserId: ", req.user._id);
+        
+        if (!user) {
+          return res.status(404).send({
+              success: false,
+              message: 'User not found'
+          });
+      }
+        const {name, email, state, city, country, phone} = req.body
         if(name) user.name = name
         if(email) user.email = email
-        if(address) user.address = address
+        if(state) user.state = state
         if(city) user.city = city
         if(country) user.country = country
         if(phone) user.phone = phone
         //save
+        console.log("Updating user:", user);
         await user.save()
         res.status(200).send({
             success: true,
@@ -645,6 +654,12 @@ export const updateProfileController = async(req, res) =>{
 export const updatePasswordController = async (req, res) =>{
     try {
       const user = await userModel.findById(req.user._id)
+      if (!user) {
+        return res.status(404).send({
+            success: false,
+            message: 'User not found'
+        });
+    }
       const {oldPassword, newPassword} = req.body
       //validation
       if(!oldPassword || !newPassword){
@@ -656,7 +671,7 @@ export const updatePasswordController = async (req, res) =>{
       const isMatch = await user.comparePassword(oldPassword)
       //validation
       if(!isMatch){
-        return res.status(500).send({
+        return res.status(400).send({
           success: false,
           message: 'Invalid old Password'
         })
@@ -681,6 +696,19 @@ export const updatePasswordController = async (req, res) =>{
 export const updateProfilePic = async(req, res) => {
     try {
       const user = await userModel.findById(req.user._id)
+      if (!user) {
+        return res.status(404).send({
+            success: false,
+            message: 'User not found'
+        });
+    }
+    if (!req.file) {
+      return res.status(400).send({
+          success: false,
+          message: 'No file uploaded',
+      });
+  }
+
       //get file grom user
       const file = getDataUri(req.file)
       //delete prev image

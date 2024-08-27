@@ -8,6 +8,9 @@ import RegisterPage from "./screens/Login&Register/Register.jsx";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SplashScreen from 'expo-splash-screen'; 
 import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
+import ProfileScreen from "./screens/ProfileSection/ProfileScreen.js";
+import FarmInventory from './screens/HOME/FarmInventory.js'
+import Pond from './screens/HOME/Pond.js'
 
 const toastConfig = {
   success: (props) => (
@@ -62,6 +65,9 @@ const Stack = createNativeStackNavigator();
 const Continue = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Home">
     <Stack.Screen name="Home" component={HomeScreen} />
+    <Stack.Screen name="Profile" component={ProfileScreen} />
+    <Stack.Screen name="Farm" component={FarmInventory} />
+    <Stack.Screen name="Pond" component={Pond} />
     <Stack.Screen name="LoginNav" component={LoginNav} />
   </Stack.Navigator>
 );

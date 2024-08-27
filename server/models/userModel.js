@@ -4,6 +4,10 @@ import JWT from "jsonwebtoken";
 
 const userSchema = new mongoose.Schema(
   {
+    name:{
+      type: String,
+      required: [true, "name is required"],
+    },
     email: {
       type: String,
       required: [true, "email is required"],
@@ -14,13 +18,17 @@ const userSchema = new mongoose.Schema(
       required: [true, "password is required"],
       minLength: [6, "password length should be > 6 char"],
     },
-    city: {
-      type: String,
-      // required: [true, "city name is required"],
-    },
+    
     country: {
       type: String,
       // required: [true, "country name is required"],
+    },
+    state:{
+      type:String,
+    },
+    city: {
+      type: String,
+      // required: [true, "city name is required"],
     },
     phone: {
       type: String,
@@ -35,6 +43,7 @@ const userSchema = new mongoose.Schema(
         type: String,
       },
     },
+    dob: Date,
     answer: {
       type: String,
     },

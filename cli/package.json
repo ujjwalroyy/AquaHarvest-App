@@ -11,7 +11,8 @@
   "dependencies": {
     "@expo/metro-runtime": "~3.2.3",
     "@expo/vector-icons": "^14.0.2",
-    "@react-native-async-storage/async-storage": "^1.23.1",
+    "@react-native-async-storage/async-storage": "1.23.1",
+    "@react-native-community/datetimepicker": "8.0.1",
     "@react-native-community/google-signin": "^5.0.0",
     "@react-native-vector-icons/fontisto": "^3.0.4-alpha.25",
     "@react-navigation/native": "^6.1.18",
@@ -19,9 +20,11 @@
     "axios": "^1.7.4",
     "cookie-session": "^2.1.0",
     "ejs": "^3.1.10",
-    "expo": "^51.0.30",
+    "expo": "~51.0.31",
     "expo-auth-session": "~5.5.2",
-    "expo-linear-gradient": "^13.0.2",
+    "expo-image-picker": "~15.0.7",
+    "expo-linear-gradient": "~13.0.2",
+    "expo-random": "~14.0.1",
     "expo-splash-screen": "~0.27.5",
     "expo-status-bar": "~1.12.1",
     "feather-icons-react": "^0.7.0",
@@ -31,6 +34,7 @@
     "react-native": "0.74.5",
     "react-native-autocomplete-input": "^5.4.0",
     "react-native-heroicons": "^4.0.0",
+    "react-native-paper": "^5.12.5",
     "react-native-picker-select": "^9.3.1",
     "react-native-toast-message": "^2.2.0",
     "react-native-vector-icons": "^10.1.0",
@@ -39,7 +43,7 @@
     "twrnc": "^4.5.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0",
+    "@babel/core": "^7.24.0",
     "expo-module-scripts": "^3.5.2"
   },
   "private": true
