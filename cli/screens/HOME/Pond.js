@@ -4,6 +4,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import axios from 'axios';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker from '@react-native-community/datetimepicker';
+// import MenuNav from '../MenuNav';
 
 export default function Pond() {
   const [ponds, setPonds] = useState([]);
@@ -15,11 +16,13 @@ export default function Pond() {
   const [area, setArea] = useState('');
   const [quantity, setQuantity] = useState('');
   const [feedType, setFeedType] = useState('');
-  const [lastTestDate, setLastTestDate] = useState(new Date());
+  const [testDate, setTestDate] = useState(new Date());
   const [test, setTest] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedPond, setSelectedPond] = useState(null);
   const [error, setError] = useState(null);
+  const [isModalVisibleMenu, setIsModalVisibleMenu] = useState(false);
+  const [selectedPondMenu, setSelectedPondMenu] = useState(null);
 
 
   const animatedValue = useRef(new Animated.Value(0)).current;
@@ -32,7 +35,6 @@ export default function Pond() {
     }).start();
 
     return () => {
-      // Clean up animation if component unmounts
       animatedValue.stopAnimation();
     };
   }, [animatedValue]);
@@ -71,7 +73,7 @@ export default function Pond() {
       area,
       quantity,
       feedType,
-      lastTestDate: lastTestDate.toLocaleDateString(),
+      testDate: testDate.toLocaleDateString(),
       test,
     };
 
@@ -104,7 +106,7 @@ export default function Pond() {
       area,
       quantity,
       feedType,
-      lastTestDate: lastTestDate.toLocaleDateString(),
+      testDate: testDate.toLocaleDateString(),
       test,
     };
 
@@ -127,6 +129,7 @@ export default function Pond() {
       setPonds(ponds.map(p => (p._id === selectedPond._id ? response.data : p)));
       clearForm();
       setUpdateModalVisible(false);
+      setIsModalVisibleMenu(false)
     } catch (error) {
       console.error('Error updating pond:', error.response ? error.response.data.message : error.message);
       Alert.alert('Error', error.response ? error.response.data.message : 'Failed to update pond.');
@@ -146,6 +149,7 @@ export default function Pond() {
         },
       });
       setPonds(ponds.filter(p => p._id !== pondId));
+      setIsModalVisibleMenu(false)
     } catch (error) {
       console.error('Error deleting pond:', error);
       Alert.alert('Error', 'Failed to delete pond.');
@@ -159,7 +163,7 @@ export default function Pond() {
     setArea('');
     setQuantity('');
     setFeedType('');
-    setLastTestDate(new Date());
+    setTestDate(new Date());
     setTest('');
     setSelectedPond(null);
   };
@@ -172,13 +176,26 @@ export default function Pond() {
     setArea(pond.area);
     setQuantity(pond.quantity);
     setFeedType(pond.feedType);
-    setLastTestDate(new Date(pond.lastTestDate));
+    setTestDate(new Date(pond.testDate));
     setTest(pond.test);
     setUpdateModalVisible(true);
   };
 
+  const handleMenuPress = (pond) => {
+    setSelectedPondMenu(pond);
+    setIsModalVisibleMenu(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalVisibleMenu(false);
+    setSelectedPondMenu(null);
+  };
+  
+
   return (
     <View style={styles.container}>
+      <Text style={styles.headText}>List Ponds</Text>
+      {/* <MenuNav/> */}
       <ScrollView style={styles.pondList}>
         {ponds.map((pond) => (
           <View key={pond._id} style={styles.pondBox}>
@@ -190,23 +207,46 @@ export default function Pond() {
             <Text>Area: {pond.area}</Text>
             <Text>Quantity: {pond.quantity}</Text>
             <Text>Feed Type: {pond.feedType}</Text>
-            <Text>Last Test Date: {pond.lastTestDate}</Text>
+            <Text>Last Test Date: {pond.testDate}</Text>
             <Text>Which Test: {pond.test}</Text>
-            <TouchableOpacity onPress={() => openUpdateModal(pond)}>
-              <Text style={styles.updateButton}>Update</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleDeletePond(pond._id)}>
-              <Text style={styles.deleteButton}>Delete</Text>
-            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleMenuPress(pond)} style={styles.menuButton}>
+            <FontAwesome name="ellipsis-v" size={24} color="#1E88E5" />
+          </TouchableOpacity>
+          <TouchableOpacity
+                style={styles.dropdownOption}
+                // onPress={() => navigation.navigate("Pond")}
+              >
+                <Text style={styles.dropdownOptionText}>Test</Text>
+              </TouchableOpacity>
           </View>
         ))}
+        {selectedPondMenu && (
+        <Modal
+          transparent={true}
+          visible={isModalVisibleMenu}
+          onRequestClose={handleCloseModal}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <TouchableOpacity onPress={() => openUpdateModal(selectedPondMenu)} style={styles.modalButton}>
+                <Text style={styles.updateButton}>Update</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleDeletePond(selectedPondMenu._id)} style={styles.modalButton}>
+                <Text style={styles.deleteButton}>Delete</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleCloseModal} style={styles.modalButton}>
+                <Text style={styles.modalButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
       </ScrollView>
 
       <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
         <FontAwesome name="plus" size={24} color="white" />
       </TouchableOpacity>
 
-      {/* Add Pond Modal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -266,18 +306,18 @@ export default function Pond() {
               <TextInput
                 style={styles.input}
                 placeholder="Last Test Date"
-                value={lastTestDate.toLocaleDateString()}
+                value={testDate.toLocaleDateString()}
                 editable={false}
               />
             </TouchableOpacity>
             {showDatePicker && (
               <DateTimePicker
-                value={lastTestDate}
+                value={testDate}
                 mode="date"
                 display="default"
                 onChange={(event, date) => {
                   setShowDatePicker(false);
-                  setLastTestDate(date || lastTestDate);
+                  setTestDate(date || testDate);
                 }}
               />
             )}
@@ -292,11 +332,15 @@ export default function Pond() {
             <TouchableOpacity style={styles.submitButton} onPress={handleAddPond}>
               <Text style={styles.submitButtonText}>Submit</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={{marginTop:10}}>
+              <Text style={styles.submitButtonText}></Text>
+            </TouchableOpacity>
           </ScrollView>
         </View>
       </Modal>
 
       {/* Update Pond Modal */}
+      <ScrollView>
       <Modal
         animationType="slide"
         transparent={true}
@@ -356,18 +400,18 @@ export default function Pond() {
               <TextInput
                 style={styles.input}
                 placeholder="Last Test Date"
-                value={lastTestDate.toLocaleDateString()}
+                value={testDate.toLocaleDateString()}
                 editable={false}
               />
             </TouchableOpacity>
             {showDatePicker && (
               <DateTimePicker
-                value={lastTestDate}
+                value={testDate}
                 mode="date"
                 display="default"
                 onChange={(event, date) => {
                   setShowDatePicker(false);
-                  setLastTestDate(date || lastTestDate);
+                  setTestDate(date || testDate);
                 }}
               />
             )}
@@ -382,9 +426,13 @@ export default function Pond() {
             <TouchableOpacity style={styles.submitButton} onPress={handleUpdatePond}>
               <Text style={styles.submitButtonText}>Update</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={{marginTop:10}}>
+              <Text style={styles.submitButtonText}></Text>
+            </TouchableOpacity>
           </ScrollView>
         </View>
       </Modal>
+      </ScrollView>
     </View>
   );
 }
@@ -395,7 +443,15 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#f5f5f5',
   },
+  headText:{
+    fontSize: 40,
+    fontWeight: 'bold',
+    marginTop: 15,
+    color: '#1E88E5',
+    textAlign:'center'
+  },
   pondList: {
+    marginTop:30,
     marginBottom: 60, // To avoid overlap with the Add button
   },
   pondBox: {
@@ -424,6 +480,76 @@ const styles = StyleSheet.create({
     color: '#E53935',
     marginTop: 5,
   },
+  dropdownOption: {
+    borderColor:'black',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  dropdownOptionText: {
+   
+    color: '#1E88E5',
+    fontSize: 18,
+    textAlign:'center'
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    width: '80%',
+    alignItems: 'center',
+  },
+  modalButton: {
+    paddingVertical: 10,
+    width: '100%',
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    fontSize: 16,
+  },
+  menuButton: {
+    position: 'absolute', 
+    top: 10, 
+    right: 10, 
+    padding: 10, 
+    zIndex: 1, 
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  menuIcon: {
+    padding: 10,
+  },
+  menuLine: {
+    width: 30,
+    height: 3,
+    backgroundColor: "#1E88E5",
+    marginVertical: 2,
+    borderRadius: 2,
+  },
+  userInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#bbdefb",
+    padding: 5,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+  },
+  userName: {
+    fontSize: 18,
+    color: "#000",
+    marginRight: 10,
+  },
+  userImage: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "#42A5F5",
+  },
   addButton: {
     position: 'absolute',
     bottom: 20,
@@ -439,11 +565,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 3,
     elevation: 5,
+    zIndex: 1,
   },
+  // modalContainer: {
+  //   flex: 1,
+  //   justifyContent: 'center',
+  //   backgroundColor: '#2986cc',
+
+  // },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
-    backgroundColor: '#2986cc',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   formContainer: {
     backgroundColor: '#fff',

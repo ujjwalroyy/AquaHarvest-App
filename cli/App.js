@@ -11,6 +11,7 @@ import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
 import ProfileScreen from "./screens/ProfileSection/ProfileScreen.js";
 import FarmInventory from './screens/HOME/FarmInventory.js'
 import Pond from './screens/HOME/Pond.js'
+import Market from './screens/HOME/MarketHome.js'
 
 const toastConfig = {
   success: (props) => (
@@ -68,6 +69,7 @@ const Continue = () => (
     <Stack.Screen name="Profile" component={ProfileScreen} />
     <Stack.Screen name="Farm" component={FarmInventory} />
     <Stack.Screen name="Pond" component={Pond} />
+    <Stack.Screen name="Market" component={Market} />
     <Stack.Screen name="LoginNav" component={LoginNav} />
   </Stack.Navigator>
 );

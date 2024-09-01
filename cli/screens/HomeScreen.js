@@ -11,15 +11,19 @@ import {
   Animated,
   Dimensions,
   ScrollView,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import Toast from "react-native-toast-message";
+import CloseIcon from 'react-native-vector-icons/FontAwesome';
 
 export default function HomeScreen(props) {
   const navigation = useNavigation();
+  const [name, setName] = useState('')
+  const [profilePic, setProfilePic] = useState(null)
   const [isSidebarVisible, setSidebarVisible] = useState(false);
   const [isDropdownVisible, setDropdownVisible] = useState(false);
   const [userData, setUserData] = useState(null);
@@ -68,6 +72,14 @@ export default function HomeScreen(props) {
     console.log("User Data Updated:", userData);
     getData();
   }, []);
+
+  
+  useEffect(() => {
+    if (userData) {
+      setName(userData.name || '');
+      setProfilePic(userData.profilePic || '');
+    }
+  }, [userData]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -225,9 +237,10 @@ export default function HomeScreen(props) {
           </TouchableOpacity>
           <View style={styles.userInfo}>
             <TouchableOpacity onPress={handleProfile} style={styles.userInfo}>
-            <Text style={styles.userName} >User Name</Text>
+            <Text style={styles.userName} >{name.split(' ')[0]}</Text>
+            
             <Image
-              source={require("../assets/images/user.png")}
+              source={profilePic}
               style={styles.userImage}
             />
             </TouchableOpacity>
@@ -248,12 +261,6 @@ export default function HomeScreen(props) {
           <View style={styles.dot}></View>
         </View>
 
-        <TouchableOpacity
-          style={styles.navButton}
-          onPress={() => handleLogout(navigation)}
-        >
-          <Text style={styles.navButtonText}>LOGOUT</Text>
-        </TouchableOpacity>
 
         <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
           {/* Farm Inventory Button with Dropdown */}
@@ -278,7 +285,8 @@ export default function HomeScreen(props) {
           )}
 
           {/* Other Navigation Buttons */}
-          <TouchableOpacity style={styles.navButton}>
+          <TouchableOpacity style={styles.navButton}
+          onPress={() => navigation.navigate("Market")}>
             <Text style={styles.navButtonText}>MARKET</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.navButton}>
@@ -290,12 +298,17 @@ export default function HomeScreen(props) {
         </ScrollView>
       </LinearGradient>
       {isSidebarVisible && (
-        <Animated.View
+        <>
+        <TouchableWithoutFeedback onPress={toggleSidebar}>
+        <View style={styles.overlay} />
+      </TouchableWithoutFeedback>
+      <Animated.View
           style={[styles.sidebar, { transform: [{ translateX: slideAnim }] }]}
         >
           <TouchableOpacity style={styles.closeButton} onPress={toggleSidebar}>
-            <Text style={styles.closeButtonText}>X</Text>
-          </TouchableOpacity>
+            <Text><CloseIcon name="close" size={24} color="#000" /></Text>
+  
+</TouchableOpacity>
           <Animated.View
             style={[
               styles.sidebarUserImageContainer,
@@ -303,11 +316,11 @@ export default function HomeScreen(props) {
             ]}
           >
             <Image
-              source={require("../assets/images/user.png")} // Local user image in the sidebar
+              source={profilePic} // Local user image in the sidebar
               style={styles.sidebarUserImage}
             />
           </Animated.View>
-          <Text style={styles.sidebarUserName}>VANSH KUSHWAHA</Text>
+          <Text style={styles.sidebarUserName}>{name}</Text>
 
           <TouchableOpacity
             style={styles.sidebarButton}
@@ -325,11 +338,14 @@ export default function HomeScreen(props) {
             <Text style={styles.sidebarButtonText}>About Us</Text>
           </TouchableOpacity>
           <View style={styles.sidebarFooter}>
-            <TouchableOpacity style={styles.aboutUsButton}>
+            <TouchableOpacity style={styles.aboutUsButton} onPress={() => handleLogout(navigation)}>
               <Text style={styles.sidebarButtonText}>Logout</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
+        </>
+        
+        
       )}
     </View>
   );
@@ -411,5 +427,96 @@ const styles = StyleSheet.create({
     color: "#1E88E5",
     fontSize: 20,
     fontWeight: "bold",
+  },
+  dropdownContainer: {
+    backgroundColor: '#E3F2FD',
+    borderRadius: 15,
+    marginBottom: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  dropdownOption: {
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  dropdownOptionText: {
+    color: '#1E88E5',
+    fontSize: 18,
+  },
+  sidebar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '80%',
+    height: '100%',
+    backgroundColor: '#ffffff',
+    padding: 20,
+    zIndex: 100,
+    shadowColor: '#000',
+    shadowOffset: { width: 2, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    elevation: 10,
+  },
+  closeButton: {
+    alignSelf: 'flex-end',
+    padding: 5,
+  },
+  closeButtonText: {
+    fontSize: 24,
+    color: '#000',
+  },
+  sidebarUserImageContainer: {
+    borderWidth: 3,
+    borderRadius: 35,
+    padding: 5,
+    marginVertical: 10,
+    alignSelf: 'center',
+  },
+  sidebarUserImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#42A5F5',
+  },
+  sidebarUserName: {
+    fontSize: 20, 
+    textAlign: 'center',
+    marginVertical: 10,
+    fontWeight: 'bold',
+  },
+  sidebarButton: {
+    marginVertical: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#E3F2FD',
+    borderRadius: 10,
+  },
+  sidebarButtonText: {
+    fontSize: 18,
+    color: '#1E88E5',
+  },
+  sidebarFooter: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  aboutUsButton: {
+    paddingVertical: 15,
+    backgroundColor: '#E3F2FD',
+    borderRadius: 10,
+    marginTop: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    zIndex: 5, 
   },
 });

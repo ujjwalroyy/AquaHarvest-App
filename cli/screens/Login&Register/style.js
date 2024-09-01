@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     color: "305375a#",
   },
   loginContainer: {
-    backgroundColor: "#fff",
+  
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     paddingHorizontal: 20,
