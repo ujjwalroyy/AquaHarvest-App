@@ -7,38 +7,41 @@ const pondSchema = new mongoose.Schema(
             ref: 'Users', 
             required: true
         },
-        name:{
+        name: {
             type: String,
-            required: [true, "Pond name is compulsory"],
+            required: [true, "Pond name is required"]
         },
-        pondType:{
+        pondArea: {
+            type: String, // Corrected to String to handle units
+            required: [true, "Pond area is required"]
+        },
+        pondDepth: {
+            type: String, // Corrected to String to handle units
+            required: [true, "Pond depth is required"]
+        },
+        cultureSystem: {
             type: String,
-            required:[true, "Pond type is compulsory"]
+            required: [true, "Culture system is required"],
+            enum: ['Extensive', 'Semi-intensive', 'Intensive'],
         },
-        depth:{
+        speciesCulture: {
             type: String,
-            required:[true, "Please enter the depth of your pond"]
+            required: [true, "Species culture is required"],
+            enum: ['Species 1', 'Species 2', 'Other'],
         },
-        area:{
+        feedType: {
             type: String,
-            required:[true, "please enter the area of pond in sq. m"]
+            required: [true, "Feed type is required"]
         },
-        quantity:{
-            type:String,
-            required:[true, "please enter the quantity of fish"]
+        stockingDensity: {
+            type: Number,
+            required: [true, "Stocking density is required"]
         },
-        feedType:{
-            type:String,
-            required:[true, "Please enter the feed type of fish"]
-        },
-        testDate:{
-            type:Date,
-            // required: [true, "Enter date"]
-        },
-        test: { type: String, 
-            enum: ['PH', 'DO', 'XY', 'YZ'],
+        lastTestDate: {
+            type: Date,
+            required: false
         }
-    },{timestamps: true}
+    }, { timestamps: true }
 );
 
 export const pondModel = mongoose.model("Ponds", pondSchema);

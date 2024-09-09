@@ -53,6 +53,8 @@ import productRoutes from "./routes/productRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import protectedRoutes from "./routes/protectedRoutes.js";
 import pondRoutes from "./routes/pondRoutes.js"
+import expenseIncomeRoutes from './routes/expenseIncomeRoutes.js'
+import passbookRoutes from './routes/passbookRoutes.js'
 app.use("/api/v1", test1);
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/product", productRoutes);
@@ -60,6 +62,8 @@ app.use("/api/v1/cat", categoryRoutes);
 app.use('/auth', authRoute);
 app.use('/api', protectedRoutes);
 app.use('/api/v1/pond', pondRoutes)
+app.use('/api/v1/expense-income', expenseIncomeRoutes)
+app.use('/api/v1/passbook', passbookRoutes);
 
 // app.get("/", (req, res) => {
 //   return res.status(200).send("<h1> Welcome to server<h1/>");

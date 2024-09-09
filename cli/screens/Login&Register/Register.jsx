@@ -28,7 +28,7 @@ const RegisterPage = () => {
   const [nameVerify, setNameVerify] = useState(false);
   const [email, setEmail] = useState('');
   const [emailVerify, setEmailVerify] = useState(false);
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState('+91');
   const [phoneVerify, setPhoneVerify] = useState(false);
   const [password, setPassword] = useState('');
   const [passwordVerify, setPasswordVerify] = useState(false);
@@ -65,6 +65,18 @@ const RegisterPage = () => {
       })
     }
   };
+
+  const handleChangePhone = (setter, validator) => (text) => {
+    const value = text.startsWith('+91') ? text : `+91${text}`;
+    setter(value);
+    validator(value);
+  };
+
+  const validatePhoneNum = (value) => {
+    const phoneNumber = value.replace('+91', '');
+    setPhoneVerify(/[6-9]{1}[0-9]{9}/.test(phoneNumber));
+  };
+
 
   const verifyOtp = async (phone, otp) => {
     try {
@@ -105,7 +117,7 @@ const RegisterPage = () => {
 
   const validateName = (name) => setNameVerify(name.length > 2);
   const validateEmail = (email) => setEmailVerify(/^[\w.%+-]+@[\w.-]+\.[a-zA-Z]{2,}$/.test(email));
-  const validatePhone = (phone) => setPhoneVerify(/[6-9]{1}[0-9]{9}/.test(phone));
+  // const validatePhone = (phone) => setPhoneVerify(/[6-9]{1}[0-9]{9}/.test(phone));
   const validatePassword = (password) => setPasswordVerify(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/.test(password));
 
   return (
@@ -170,13 +182,13 @@ const RegisterPage = () => {
             <TextInput
               placeholder="Phone"
               style={styles.textInput}
-              onChangeText={handleChange(setPhone, validatePhone)}
+              onChangeText={handleChangePhone(setPhone, validatePhoneNum)}
               maxLength={13}
             />
             {phoneVerify && <Feather name="check-circle" color="green" size={20} />}
-            {!phoneVerify && phone.length > 2 && <Error name="warning" color="red" size={20} />}
+            {!phoneVerify && validatePhoneNum.length > 2 && <Error name="warning" color="red" size={20} />}
           </View>
-          {phone.length <= 2 ? null : !phoneVerify && (
+          {validatePhoneNum.length <= 2 ? null : !phoneVerify && (
             <Text style={{ marginLeft: 20, color: "red" }}>Phone number should start with 6-9 and be followed by 9 digits</Text>
           )}
 

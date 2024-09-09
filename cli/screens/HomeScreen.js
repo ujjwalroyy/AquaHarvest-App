@@ -21,7 +21,6 @@ import Toast from "react-native-toast-message";
 import CloseIcon from 'react-native-vector-icons/FontAwesome';
 
 export default function HomeScreen(props) {
-  const navigation = useNavigation();
   const [name, setName] = useState('')
   const [profilePic, setProfilePic] = useState(null)
   const [isSidebarVisible, setSidebarVisible] = useState(false);
@@ -40,38 +39,48 @@ export default function HomeScreen(props) {
   // })
 
   
+  const navigation = useNavigation();
 
   async function getData() {
     try {
       const token = await AsyncStorage.getItem("token");
-      console.log("Token in getData:", token);
-  
+      console.log("Token in getData home:", token);
+
       if (token) {
         const response = await axios.get(
           "http://192.168.43.60:5050/api/v1/user/profile",
           { headers: { Authorization: `Bearer ${token}` } }
         );
         console.log("Response data home:", response.data);
-  
+
         if (response.data.user) {
           if (JSON.stringify(userData) !== JSON.stringify(response.data.user)) {
             console.log("Setting user data:", response.data.user);
             setUserData(response.data.user);
           }
-        }else {
+        } else {
           console.warn("User data not found in response");
         }
       } else {
         console.warn("Token not found");
+        navigation.navigate('LoginNav', {screen: 'Login'}); 
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
+
+      if (error.response && error.response.status === 401) {
+        console.warn("Unauthorized, redirecting to login");
+        await AsyncStorage.removeItem('token'); 
+        navigation.navigate('LoginNav', {screen: 'Login'}); 
+      }
     }
   }
+
   useEffect(() => {
     console.log("User Data Updated:", userData);
     getData();
   }, []);
+
 
   
   useEffect(() => {
@@ -149,20 +158,27 @@ export default function HomeScreen(props) {
 
   const handleLogout = async (navigation) => {
     try {
-      // Make a request to the logout endpoint
-      const response = await axios.post(
-        "http://192.168.43.60:5050/api/v1/user/logout"
-      );
-      const token = AsyncStorage.getItem('token');
-      console.log("My Token ", token);
+      const token = await AsyncStorage.getItem('token');
       
-
+      if (!token) {
+        console.error("No token found");
+        return;
+      }
+  
+      const response = await axios.post(
+        "http://192.168.43.60:5050/api/v1/user/logout",
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+  
       if (response.data.success) {
-        AsyncStorage.setItem("isLoggedIn", "false");
-        AsyncStorage.setItem("token", "");
+        await AsyncStorage.setItem("isLoggedIn", "false");
+        await AsyncStorage.setItem("token", "");
         
-        
-
         navigation.reset({
           index: 0,
           routes: [{ name: "LoginNav" }],
@@ -174,6 +190,7 @@ export default function HomeScreen(props) {
       console.error("Error logging out:", error);
     }
   };
+  
 
   useEffect(() => {
     Animated.loop(
@@ -264,10 +281,10 @@ export default function HomeScreen(props) {
 
         <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
           {/* Farm Inventory Button with Dropdown */}
-          <TouchableOpacity style={styles.navButton} onPress={toggleDropdown}>
+          {/* <TouchableOpacity style={styles.navButton} onPress={toggleDropdown}>
             <Text style={styles.navButtonText}>FARM INVENTORY</Text>
-          </TouchableOpacity>
-          {isDropdownVisible && (
+          </TouchableOpacity> */}
+          {/* {isDropdownVisible && (
             <View style={styles.dropdownContainer}>
               <TouchableOpacity
                 style={styles.dropdownOption}
@@ -282,9 +299,13 @@ export default function HomeScreen(props) {
                 <Text style={styles.dropdownOptionText}>Pond</Text>
               </TouchableOpacity>
             </View>
-          )}
+          )} */}
 
           {/* Other Navigation Buttons */}
+          <TouchableOpacity style={styles.navButton}
+          onPress={() => navigation.navigate("Pond")}>
+            <Text style={styles.navButtonText}>POND MANAGEMENT</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.navButton}
           onPress={() => navigation.navigate("Market")}>
             <Text style={styles.navButtonText}>MARKET</Text>

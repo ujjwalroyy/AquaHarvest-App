@@ -3,16 +3,22 @@ import Pond from '../models/pondModel.js';
 export const createPond = async (req, res) => {
   try {
     const { _id: userId } = req.user; 
-
-  
-    const { name, pondType, depth, area, quantity, feedType, testDate, test } = req.body;
-    if (!name || !pondType || !depth || !area || !quantity || !feedType || !testDate || !test) {
+    const { name, pondArea, pondDepth, cultureSystem, speciesCulture, stockingDensity, feedType, lastTestDate } = req.body;
+    
+    if (!name || !pondArea || !pondDepth || !cultureSystem || !speciesCulture || !stockingDensity || !feedType) {
       return res.status(400).json({ message: 'All fields are required.' });
     }
 
     const pondData = {
-      ...req.body,
-      userId
+      name,
+      pondArea,
+      pondDepth,
+      cultureSystem,
+      speciesCulture,
+      stockingDensity,
+      feedType,
+      userId,
+      lastTestDate: lastTestDate ? new Date(lastTestDate) : null // Handle optional lastTestDate
     };
 
     const newPond = await Pond.create(pondData);
@@ -26,7 +32,6 @@ export const createPond = async (req, res) => {
 export const getAllPonds = async (req, res) => {
   try {
     const userId = req.user._id; 
-
     const ponds = await Pond.find({ userId });
     res.status(200).json(ponds);
   } catch (error) {
@@ -40,19 +45,14 @@ export const deletePond = async (req, res) => {
     const { _id: userId } = req.user; 
     const { pondId } = req.params;
 
-    console.log('User ID from request:', userId);
-    console.log('Pond ID from request:', pondId);
-
     const pond = await Pond.findById(pondId);
-    console.log('Pond found:', pond);
 
     if (!pond) {
       return res.status(404).json({ message: "Pond not found" });
     }
 
-    console.log('Pond userId:', pond.userId.toString());
     if (!pond.userId.equals(userId)) {
-      return res.status(403).json({ message: "Not authorized to update this pond" });
+      return res.status(403).json({ message: "Not authorized to delete this pond" });
     }
 
     await Pond.findByIdAndDelete(pondId);
@@ -63,19 +63,13 @@ export const deletePond = async (req, res) => {
   }
 };
 
-
 export const updatePond = async (req, res) => {
   try {
     const { _id: userId } = req.user;
     const { pondId } = req.params;
     const updatedData = req.body;
 
-    console.log("User ID from request:", userId);
-    console.log("Pond ID from request:", pondId);
-
     const pond = await Pond.findById(pondId);
-
-console.log("Pond User ID: ", pond.userId.toString());
 
     if (!pond) {
       return res.status(404).json({ message: "Pond not found" });
