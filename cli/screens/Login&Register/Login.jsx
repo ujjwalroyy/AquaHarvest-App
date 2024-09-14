@@ -29,7 +29,8 @@ function LoginPage() {
   const [emailVerify, setEmailVerify] = useState(false);
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState('');
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState('+91');
+  const [phoneVerify, setPhoneVerify] = useState(false);
   const [passwordVerify, setPasswordVerify] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
@@ -37,8 +38,8 @@ function LoginPage() {
   const [verificationMethod, setVerificationMethod] = useState(''); // 'contact' or 'email'
 
   const handleSubmit = () => {
-    if (emailVerify && passwordVerify) {
-      const userData = { email, password };
+    if (phoneVerify && passwordVerify) {
+      const userData = { phone, password };
       console.log("Submitting data:", userData);
 
       axios.post("http://192.168.43.60:5050/api/v1/user/signin", userData)
@@ -60,7 +61,7 @@ function LoginPage() {
           Alert.alert("Error", "An error occurred. Please try again.");
         });
     } else {
-      Alert.alert("Invalid Input", "Please check your email and password.");
+      Alert.alert("Invalid Input", "Please check your Phone no. and password.");
     }
   };
 
@@ -179,6 +180,17 @@ function LoginPage() {
     setEmail(emailVar);
     setEmailVerify(/^[\w.%+-]+@[\w.-]+\.[a-zA-Z]{2,}$/.test(emailVar));
   }
+  const handleChangePhone = (setter, validator) => (text) => {
+    const value = text.startsWith('+91') ? text : `+91${text}`;
+    setter(value);
+    validator(value);
+  };
+
+  const validatePhoneNum = (value) => {
+    const phoneNumber = value.replace('+91', '');
+    setPhoneVerify(/[6-9]{1}[0-9]{9}/.test(phoneNumber));
+  };
+
 
   function handlePassword(e) {
     const passwordVar = e.nativeEvent.text;
@@ -224,25 +236,18 @@ function LoginPage() {
           <Text style={styles.text_header}>Fishy...</Text>
 
           <View style={styles.action}>
-            <Fontisto
-              name="email"
-              color="#420475"
-              size={24}
-              style={{ marginLeft: 0, paddingRight: 5 }}
-            />
+            <FontAwesome name="mobile" color="#420475" size={35} style={{ paddingRight: 10, marginTop: -7, marginLeft: 5 }} />
             <TextInput
-              placeholder="Email"
+              placeholder="Phone"
               style={styles.textInput}
-              onChange={handleEmail}
-              value={email}
+              onChangeText={handleChangePhone(setPhone, validatePhoneNum)}
+              maxLength={13}
             />
-            {emailVerify && <Feather name="check-circle" color="green" size={20} />}
-            {!emailVerify && email.length > 2 && <Error name="warning" color="red" size={20} />}
+            {phoneVerify && <Feather name="check-circle" color="green" size={20} />}
+            {!phoneVerify && validatePhoneNum.length > 2 && <Error name="warning" color="red" size={20} />}
           </View>
-          {email.length > 2 && !emailVerify && (
-            <Text style={{ marginLeft: 20, color: "red" }}>
-              Please enter a valid email.
-            </Text>
+          {validatePhoneNum.length <= 2 ? null : !phoneVerify && (
+            <Text style={{ marginLeft: 20, color: "red" }}>Phone number should start with 6-9 and be followed by 9 digits</Text>
           )}
 
 <View style={styles.action}>

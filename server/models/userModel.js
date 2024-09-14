@@ -51,6 +51,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    subscription:{
+      id: String,
+      status: String,
+    },
     otp: {
       type: String,
     },

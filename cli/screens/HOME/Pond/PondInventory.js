@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Button, TouchableOpacity, FlatList, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, Button, TouchableOpacity, FlatList, StyleSheet, ScrollView, Alert } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
-import axios from 'axios'
+import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const PondInventory = ({ navigation }) => {
+const PondInventory = ({navigation, route}) => {
+  const { pondId, pondName } = route.params;  
   const [expenses, setExpenses] = useState([]);
   const [income, setIncome] = useState([]);
   const [productName, setProductName] = useState('');
@@ -19,32 +20,34 @@ const PondInventory = ({ navigation }) => {
   const [editingId, setEditingId] = useState(null);
   const [token, setToken] = useState('');
 
-  const apiUrl = "http://192.168.43.60:5050/api/v1/expense-income"
+  const apiUrl = "http://192.168.43.60:5050/api/v1/expense-income";
 
+  // Fetch token and records on load
   useEffect(() => {
     const getTokenAndFetchRecords = async () => {
       try {
         const storedToken = await AsyncStorage.getItem('token');
         if (storedToken) {
           setToken(storedToken);
-          fetchRecords(storedToken);
+          fetchRecords(storedToken);  
         }
       } catch (error) {
-        console.error('Failed to retrieve token from AsyncStorage:', error);
+        console.error('Failed to retrieve token:', error);
       }
     };
     getTokenAndFetchRecords();
-  }, [isExpense]);
+  }, [isExpense, cost]);
 
   const fetchRecords = async (authToken) => {
     try {
-      const endpoint = isExpense ? '/expenses' : '/incomes';
+      const endpoint = isExpense ? `/expense/pond/${pondId}` : `/income/pond/${pondId}`;
       const response = await axios.get(`${apiUrl}${endpoint}`, {
         headers: {
           Authorization: `Bearer ${authToken}`
         }
       });
       const { data } = response;
+      console.log('Fetched Data ----------------------------> ', data); 
 
       if (isExpense) {
         setExpenses(data);
@@ -56,51 +59,38 @@ const PondInventory = ({ navigation }) => {
     }
   };
 
-
-
   const addOrUpdateRecord = async () => {
-    const record = { productName, quantity: `${quantity} ${quantityUnit}`, cost, remark, date: date.toDateString() };
+    const record = { pondId, productName, quantity: `${quantity} ${quantityUnit}`, cost, remark, date: date.toDateString() };
+
     try {
-      console.log("Record to send:", record);
-    console.log("Editing ID:", editingId);
       if (editingId !== null) {
         const endpoint = isExpense ? `/expense/${editingId}` : `/income/${editingId}`;
-        console.log("Updating record at endpoint:", `${apiUrl}${endpoint}`);
         const updatedRecord = await axios.put(`${apiUrl}${endpoint}`, record, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
-        console.log("Update response:", updatedRecord.data);
+
         if (isExpense) {
           setExpenses(expenses.map(item => item._id === editingId ? updatedRecord.data : item)); 
         } else {
           setIncome(income.map(item => item._id === editingId ? updatedRecord.data : item)); 
         }
         setEditingId(null);
-        fetchRecords(token);
       } else {
         const endpoint = isExpense ? '/expense' : '/income';
-        console.log("Creating record at endpoint:", `${apiUrl}${endpoint}`);
         await axios.post(`${apiUrl}${endpoint}`, record, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
-        if (isExpense) {
-          setExpenses([...expenses, record]);
-        } else {
-          setIncome([...income, record]);
-        }
+        fetchRecords(token);
       }
-      fetchRecords(token);
       clearForm();
     } catch (error) {
       console.error('Failed to add or update record:', error);
     }
   };
-
-
 
   const clearForm = () => {
     setProductName('');
@@ -119,7 +109,6 @@ const PondInventory = ({ navigation }) => {
       setProductName(record.productName);
       setQuantity(qty);
       setQuantityUnit(unit);
-      console.log('Cost:', record.cost); 
       setCost(record.cost);
       setRemark(record.remark);
       setDate(new Date(record.date));
@@ -127,18 +116,9 @@ const PondInventory = ({ navigation }) => {
     }
   };
 
-
-  const calculateTotalExpense = () => {
-    return expenses.reduce((sum, item) => sum + parseFloat(item.cost || 0), 0);
-  };
-
-  const calculateTotalIncome = () => {
-    return income.reduce((sum, item) => sum + parseFloat(item.cost || 0), 0);
-  };
-
-  const calculateProfitOrLoss = () => {
-    return calculateTotalIncome() - calculateTotalExpense();
-  };
+  const calculateTotalExpense = () => expenses.reduce((sum, item) => sum + parseFloat(item.cost || 0), 0);
+  const calculateTotalIncome = () => income.reduce((sum, item) => sum + parseFloat(item.cost || 0), 0);
+  const calculateProfitOrLoss = () => calculateTotalIncome() - calculateTotalExpense();
 
   const handleDateChange = (event, selectedDate) => {
     setShowDatePicker(false);
@@ -146,7 +126,6 @@ const PondInventory = ({ navigation }) => {
       setDate(selectedDate);
     }
   };
-
   const renderRecord = ({ item, index }) => (
     <View style={styles.tableRow}>
       <Text style={styles.tableCell}>{index + 1}</Text>

@@ -1,30 +1,31 @@
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
 
 const incomeSchema = new mongoose.Schema({
-    userId: {
+    pondId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Users', 
+        ref: 'Ponds', 
         required: true
     },
-    productName:{
-        type:String,
+    productName: {
+        type: String,
+        required: true
     },
-    cost:{
-        type:Number,
+    quantity: {
+        type: String,
+        required: true
     },
-    quantity:{
-        type:String,
+    cost: {
+        type: Number,
+        required: true
     },
-    totalPrice:{
-        type:Number,
+    remark: {
+        type: String,
     },
-    remark:{
-        type: String
-    },
-    date:{
-        type:Date,
+    date: {
+        type: Date,
+        required: true
     }
-}, {timestamps: true})
+}, { timestamps: true });
 
-export const incomeModel = mongoose.model("Income", incomeSchema)
-export default incomeModel
+export const incomeModel = mongoose.model("Income", incomeSchema);
+export default incomeModel;

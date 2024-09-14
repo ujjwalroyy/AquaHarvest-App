@@ -1,48 +1,118 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Alert } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Modal,
+  Alert,
+} from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import axios from 'axios';
 
-export default function PondTest({ navigation }) {
-  const [waterQuality, setWaterQuality] = useState('Fresh');
+export default function PondTest({ navigation, route }) {
+  const { pondId } = route.params;
+  const [waterQuality, setWaterQuality] = useState("Fresh");
   const [date, setDate] = useState(new Date());
-  const [pH, setPH] = useState('');
-  const [temperature, setTemperature] = useState('');
-  const [temperatureUnit, setTemperatureUnit] = useState('Celsius');
-  const [DO, setDO] = useState('');
-  const [TDS, setTDS] = useState('');
-  const [turbidity, setTurbidity] = useState('');
-  const [plankton, setPlankton] = useState(''); 
-  const [avgLength, setAvgLength] = useState('');
-  const [avgWeight, setAvgWeight] = useState('');
+  const [pH, setPH] = useState("");
+  const [temperature, setTemperature] = useState("");
+  const [temperatureUnit, setTemperatureUnit] = useState("Celsius");
+  const [DO, setDO] = useState("");
+  const [TDS, setTDS] = useState("");
+  const [turbidity, setTurbidity] = useState("");
+  const [plankton, setPlankton] = useState("");
+  const [avgLength, setAvgLength] = useState("");
+  const [avgWeight, setAvgWeight] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [temperatureInCelsius, setTemperatureInCelsius] = useState('');
 
-  const handleSubmit = () => {
-    if (!pH || !temperature || !DO || !TDS || !turbidity || !plankton || !avgLength || !avgWeight) {
-      Alert.alert("Validation Error", "Please fill in all required fields.");
+  const handleSubmitSampling = async () => {
+    if (!pH || !temperature || !DO || !TDS || !turbidity || !plankton) {
+      Alert.alert("Validation Error", "Please fill in all required fields in the Sampling section.");
       return;
     }
-  
+
     setLoading(true);
-  
-    setTimeout(() => {
+
+    const testData = {
+      pondId,
+      waterQuality,
+      date: date.toISOString(),
+      pH,
+      temperature: `${temperature} ${temperatureUnit}`,
+      DO,
+      TDS,
+      turbidity,
+      plankton,
+    };
+
+    try {
+      const response = await axios.post('http://192.168.43.60:5050/api/v1/pond-test', testData);
       setLoading(false);
-  
-      navigation.navigate('PondReport', {
-        waterQuality,
-        date: date.toLocaleDateString(),
-        pH,
-        temperature: `${temperature} ${temperatureUnit}`,  
-        DO,
-        TDS,
-        turbidity,
-        plankton,
-        avgLength,
-        avgWeight,
-      });
-    }, 4000); 
+      Alert.alert('Success', 'Sampling data saved successfully');
+      navigation.navigate("PondReport", response.data.newPondTest);
+    } catch (error) {
+      setLoading(false);
+      Alert.alert('Error', 'Failed to save sampling data');
+    }
   };
-  
+
+  const handleSubmitTesting = async () => {
+    if (!avgLength || !avgWeight) {
+      Alert.alert("Validation Error", "Please fill in all required fields in the Testing section.");
+      return;
+    }
+
+    setLoading(true);
+
+    const testData = {
+      pondId,
+      avgLength,
+      avgWeight,
+    };
+
+    try {
+      const response = await axios.post('http://192.168.43.60:5050/api/v1/pond-test', testData);
+      setLoading(false);
+      Alert.alert('Success', 'Testing data saved successfully');
+      navigation.navigate("PondReport", response.data.newPondTest);
+    } catch (error) {
+      setLoading(false);
+      Alert.alert('Error', 'Failed to save testing data');
+    }
+  };
+
+  const handleTemperatureChange = (value) => {
+    setTemperature(value);
+    let temp = parseFloat(value);
+    if (isNaN(temp)) return;
+
+    if (temperatureUnit === 'Fahrenheit') {
+      const celsiusValue = ((temp - 32) * 5) / 9;
+      setTemperatureInCelsius(celsiusValue.toFixed(2));
+    } else {
+      setTemperatureInCelsius(temp.toFixed(2));
+    }
+  };
+
+  const handleUnitChange = (unit) => {
+    setTemperatureUnit(unit);
+
+    let temp = parseFloat(temperature);
+    if (isNaN(temp)) return;
+
+    if (unit === 'Celsius') {
+      const celsiusValue = ((temp - 32) * 5) / 9;
+      setTemperatureInCelsius(celsiusValue.toFixed(2));
+    } else if (unit === 'Fahrenheit') {
+      const fahrenheitValue = (temp * 9) / 5 + 32;
+      setTemperatureInCelsius(temp.toFixed(2));
+      setTemperature(fahrenheitValue.toFixed(2));
+    }
+  };
 
   const onDateChange = (event, selectedDate) => {
     setShowDatePicker(false);
@@ -54,6 +124,9 @@ export default function PondTest({ navigation }) {
       <ScrollView contentContainerStyle={styles.scrollView}>
         <Text style={styles.title}>Conduct a Test</Text>
 
+        {/* Sampling Section */}
+        <Text style={styles.sectionTitle}>Sampling</Text>
+
         <Text style={styles.label}>Water Quality</Text>
         <TextInput
           style={styles.textInput}
@@ -61,7 +134,10 @@ export default function PondTest({ navigation }) {
           onChangeText={setWaterQuality}
         />
 
-        <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowDatePicker(true)}
+        >
           <Text style={styles.dateText}>Date: {date.toLocaleDateString()}</Text>
         </TouchableOpacity>
 
@@ -82,26 +158,42 @@ export default function PondTest({ navigation }) {
           keyboardType="numeric"
         />
 
-        <Text style={styles.label}>Temperature</Text>
-        <TextInput
-          style={styles.textInput}
-          value={temperature}
-          onChangeText={setTemperature}
-          keyboardType="numeric"
-        />
-        <View style={styles.tempUnitContainer}>
-          <TouchableOpacity
-            style={temperatureUnit === 'Celsius' ? styles.activeUnit : styles.unit}
-            onPress={() => setTemperatureUnit('Celsius')}
-          >
-            <Text>Celsius</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={temperatureUnit === 'Fahrenheit' ? styles.activeUnit : styles.unit}
-            onPress={() => setTemperatureUnit('Fahrenheit')}
-          >
-            <Text>Fahrenheit</Text>
-          </TouchableOpacity>
+        <View style={styles.container}>
+          <Text style={styles.label}>Temperature</Text>
+          <TextInput
+            style={styles.textInput}
+            value={temperature}
+            onChangeText={handleTemperatureChange}
+            keyboardType="numeric"
+          />
+
+          <View style={styles.tempUnitContainer}>
+            <TouchableOpacity
+              style={
+                temperatureUnit === "Celsius" ? styles.activeUnit : styles.unit
+              }
+              onPress={() => handleUnitChange("Celsius")}
+            >
+              <Text>Celsius</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={
+                temperatureUnit === "Fahrenheit"
+                  ? styles.activeUnit
+                  : styles.unit
+              }
+              onPress={() => handleUnitChange("Fahrenheit")}
+            >
+              <Text>Fahrenheit</Text>
+            </TouchableOpacity>
+          </View>
+
+          {temperatureUnit === "Fahrenheit" && (
+            <Text style={styles.convertedText}>
+              Converted to Celsius: {temperatureInCelsius} °C
+            </Text>
+          )}
         </View>
 
         <Text style={styles.label}>DO</Text>
@@ -136,7 +228,13 @@ export default function PondTest({ navigation }) {
           keyboardType="numeric"
         />
 
-        <Text style={styles.label}>Fish Growth</Text>
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubmitSampling}>
+          <Text style={styles.submitButtonText}>Generate Sampling Report</Text>
+        </TouchableOpacity>
+
+        {/* Testing Section */}
+        <Text style={styles.sectionTitle}>Testing</Text>
+
         <TextInput
           style={styles.textInput}
           placeholder="Avg Length (cm)"
@@ -152,8 +250,8 @@ export default function PondTest({ navigation }) {
           keyboardType="numeric"
         />
 
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>Generate Report</Text>
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubmitTesting}>
+          <Text style={styles.submitButtonText}>Generate Testing Report</Text>
         </TouchableOpacity>
 
         {loading && <Text style={styles.loadingText}>Loading...</Text>}
@@ -165,75 +263,82 @@ export default function PondTest({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    padding: 16,
   },
   scrollView: {
-    padding: 15,
+    paddingBottom: 20,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 20,
+    textAlign: "center",
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginTop: 20,
+    marginBottom: 10,
   },
   label: {
     fontSize: 16,
-    fontWeight: 'bold',
-    marginTop: 15,
+    marginVertical: 8,
   },
   textInput: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    padding: 10,
-    marginVertical: 5,
-  },
-  tempUnitContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 5,
-  },
-  unit: {
-    padding: 10,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    flex: 1,
-    alignItems: 'center',
-  },
-  activeUnit: {
+    borderColor: "#ccc",
+    borderRadius: 4,
     padding: 10,
-    borderWidth: 1,
-    borderColor: '#1E88E5',
-    borderRadius: 5,
-    flex: 1,
-    alignItems: 'center',
-    backgroundColor: '#1E88E5',
-    color: '#fff',
+    fontSize: 16,
+    marginBottom: 10,
   },
   dateButton: {
     padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    marginVertical: 5,
+    backgroundColor: "#ddd",
+    borderRadius: 4,
+    marginVertical: 10,
   },
   dateText: {
     fontSize: 16,
   },
+  tempUnitContainer: {
+    flexDirection: "row",
+    marginVertical: 10,
+  },
+  unit: {
+    flex: 1,
+    padding: 10,
+    backgroundColor: "#eee",
+    borderRadius: 4,
+    marginHorizontal: 5,
+    alignItems: "center",
+  },
+  activeUnit: {
+    flex: 1,
+    padding: 10,
+    backgroundColor: "#007BFF",
+    borderRadius: 4,
+    marginHorizontal: 5,
+    alignItems: "center",
+  },
+  convertedText: {
+    fontSize: 16,
+    marginTop: 10,
+  },
   submitButton: {
-    backgroundColor: '#1E88E5',
+    backgroundColor: "#007BFF",
     padding: 15,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginVertical: 20,
+    borderRadius: 4,
+    marginVertical: 10,
   },
   submitButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    textAlign: "center",
   },
   loadingText: {
-    textAlign: 'center',
     fontSize: 16,
-    fontWeight: 'bold',
+    textAlign: "center",
     marginTop: 20,
   },
 });

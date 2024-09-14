@@ -117,7 +117,7 @@ const RegisterPage = () => {
 
   const validateName = (name) => setNameVerify(name.length > 2);
   const validateEmail = (email) => setEmailVerify(/^[\w.%+-]+@[\w.-]+\.[a-zA-Z]{2,}$/.test(email));
-  // const validatePhone = (phone) => setPhoneVerify(/[6-9]{1}[0-9]{9}/.test(phone));
+  const validatePhone = (phone) => setPhoneVerify(/[6-9]{1}[0-9]{9}/.test(phone));
   const validatePassword = (password) => setPasswordVerify(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/.test(password));
 
   return (

@@ -27,14 +27,14 @@ const pondSchema = new mongoose.Schema(
         speciesCulture: {
             type: String,
             required: [true, "Species culture is required"],
-            enum: ['Species 1', 'Species 2', 'Other'],
+            enum: ['IMC', 'Magur', 'Singhi', 'Panga', 'Amur Carp', 'Calbasu', 'Pacu', 'Silver Grass', 'Vannamei', 'Rosen Bergi', 'Monoder'],
         },
         feedType: {
             type: String,
             required: [true, "Feed type is required"]
         },
         stockingDensity: {
-            type: Number,
+            type: String,
             required: [true, "Stocking density is required"]
         },
         lastTestDate: {

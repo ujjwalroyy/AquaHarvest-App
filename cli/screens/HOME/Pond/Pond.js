@@ -11,6 +11,7 @@ export default function Pond({ navigation }) {
   const [isModalVisible, setModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
+  const [pondId, setPondId] = useState(null); 
   const [name, setName] = useState('');
   const [pondArea, setPondArea] = useState('');
   const [areaUnit, setAreaUnit] = useState('Square');
@@ -24,9 +25,20 @@ export default function Pond({ navigation }) {
   const [lastTestDate, setLastTestDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+
   useEffect(() => {
     fetchPonds();
   }, []);
+
+  useEffect(() => {
+    setSpeciesRangeMessage(getSpeciesRangeMessage(species));
+  }, [species]);
+
+  useEffect(() => {
+    setSpeciesRangeMessage(getSpeciesRangeMessage(species));
+  }, []);
+
+
 
   const fetchPonds = async () => {
     try {
@@ -72,7 +84,7 @@ export default function Pond({ navigation }) {
       
       if (isEditing) {
         await axios.put(
-          `http://192.168.43.60:5050/api/v1/pond/update/${ponds[editIndex]._id}`,
+          `http://192.168.43.60:5050/api/v1/pond/update/${pondId}`,
           newPond,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -100,6 +112,10 @@ export default function Pond({ navigation }) {
     setEditIndex(index);
     const pond = ponds[index];
     setName(pond.name);
+    console.log("PondName : --------------------------------------------> ", pond.name);
+    setPondId(pond._id);
+    console.log("PondId : --------------------------------------------> ", pond._id);
+    
     const [pondAreaValue = '', pondAreaUnit = ''] = pond.pondArea ? pond.pondArea.split(' ') : [];
     console.log('Setting Pond Area:', pondAreaValue, pondAreaUnit);
     setPondArea(pondAreaValue);
@@ -108,7 +124,7 @@ export default function Pond({ navigation }) {
     setPondDepth(pondDepthValue);
     setDepthUnit(pondDepthUnit);
     setCultureSystem(pond.cultureSystem);
-    if (pond.speciesCulture !== 'Species 1' && pond.speciesCulture !== 'Species 2') {
+    if (!['IMC', 'Magur', 'Singhi', 'Panga', 'Amur Carp', 'Calbasu', 'Pacu', 'Silver Grass', 'Vannamei', 'Rosen Bergi', 'Monoder'].includes(pond.speciesCulture)) {
       setSpecies('Other');
       setNewSpecies(pond.speciesCulture);
     } else {
@@ -121,6 +137,7 @@ export default function Pond({ navigation }) {
   };
 
   const handleDeletePond = async (index) => {
+    const pondToDelete = ponds[index];
     Alert.alert(
       "Confirm Deletion",
       "Are you sure you want to delete this pond?",
@@ -139,7 +156,7 @@ export default function Pond({ navigation }) {
                 return;
               }
               await axios.delete(
-                `http://192.168.43.60:5050/api/v1/pond/delete/${ponds[index]._id}`,
+                `http://192.168.43.60:5050/api/v1/pond/delete/${pondToDelete._id}`,
                 { headers: { Authorization: `Bearer ${token}` } }
               );
               fetchPonds();
@@ -153,6 +170,27 @@ export default function Pond({ navigation }) {
     );
   };
 
+  const getSpeciesRangeMessage = (species) => {
+    const ranges = {
+      IMC: 'In range 200 to 500',
+      Magur: 'In range 150 to 400',
+      Singhi: 'In range 100 to 350',
+      Panga: 'In range 200 to 450',
+      'Amur Carp': 'In range 150 to 400',
+      Calbasu: 'In range 200 to 500',
+      Pacu: 'In range 100 to 300',
+      'Silver Grass': 'In range 150 to 350',
+      Vannamei: 'In range 200 to 500',
+      'Rosen Bergi': 'In range 150 to 400',
+      Monoder: 'In range 100 to 300',
+      Other: 'Specify range for this species',
+    };
+    return ranges[species] || '';
+  };
+  const [speciesRangeMessage, setSpeciesRangeMessage] = useState(getSpeciesRangeMessage(species));
+
+
+
   const clearForm = () => {
     setName('');
     setPondArea('');
@@ -162,6 +200,7 @@ export default function Pond({ navigation }) {
     setSpecies('Species 1');
     setNewSpecies('');
     setLastTestDate(new Date());
+    setPondId(null);
   };
 
   const onDateChange = (event, selectedDate) => {
@@ -204,16 +243,16 @@ export default function Pond({ navigation }) {
             <Text>Species: {pond.speciesCulture}</Text>
             <Text>Stocking Density: {pond.stockingDensity} fish/m²</Text>
             <Text>Feed Type: {pond.feedType}</Text>
-            <Text>Last Test Date: {pond.lastTestDate}</Text>
+            <Text>Date: {pond.lastTestDate}</Text>
 
             <View style={styles.buttonGroup}>
-              <TouchableOpacity style={styles.cardButton} onPress={() => navigation.navigate('PondReport')}>
+              <TouchableOpacity style={styles.cardButton} onPress={() => navigation.navigate('PondReport', { pondId: pond._id})}>
                 <Text style={styles.buttonText}>Report</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.cardButton} onPress={() => navigation.navigate('PondInventory')}>
+              <TouchableOpacity style={styles.cardButton} onPress={() => navigation.navigate('PondInventory', { pondId: pond._id})}>
                 <Text style={styles.buttonText}>Inventory</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.cardButton} onPress={() => navigation.navigate('PondTest')}>
+              <TouchableOpacity style={styles.cardButton} onPress={() => navigation.navigate('PondTest', { pondId: pond._id})}>
                 <Text style={styles.buttonText}>Test</Text>
               </TouchableOpacity>
             </View>
@@ -290,20 +329,33 @@ export default function Pond({ navigation }) {
             <Picker
               selectedValue={species}
               style={styles.picker}
-              onValueChange={itemValue => setSpecies(itemValue)}
+              onValueChange={(itemValue) => setSpecies(itemValue)}
             >
-              <Picker.Item label="Species 1" value="Species 1" />
-              <Picker.Item label="Species 2" value="Species 2" />
+              <Picker.Item label="IMC" value="IMC" />
+              <Picker.Item label="Magur" value="Magur" />
+              <Picker.Item label="Singhi" value="Singhi" />
+              <Picker.Item label="Panga" value="Panga" />
+              <Picker.Item label="Amur Carp" value="Amur Carp" />
+              <Picker.Item label="Calbasu" value="Calbasu" />
+              <Picker.Item label="Pacu" value="Pacu" />
+              <Picker.Item label="Silver Grass" value="Silver Grass" />
+              <Picker.Item label="Vannamei" value="Vannamei" />
+              <Picker.Item label="Rosen Bergi" value="Rosen Bergi" />
+              <Picker.Item label="Monoder" value="Monoder" />
               <Picker.Item label="Other" value="Other" />
             </Picker>
+
+            <Text style={{ color: 'red' }}>{speciesRangeMessage}</Text>
+
             {species === 'Other' && (
               <TextInput
                 style={styles.input}
-                placeholder="Specify Species"
+                placeholder="Specify Other Species"
                 value={newSpecies}
                 onChangeText={setNewSpecies}
               />
             )}
+
             <TextInput
               style={styles.input}
               placeholder="Stocking Density (fish/m²)"

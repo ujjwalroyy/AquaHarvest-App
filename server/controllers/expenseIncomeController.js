@@ -4,21 +4,23 @@ import expenseModel from '../models/expenseModel.js';
 
 export const createIncome = async (req, res) => {
     try {
-        const { productName, cost, quantity, remark, date } = req.body;
+        const { pondId, productName, cost, quantity, remark, date } = req.body;
 
         const newIncome = await incomeModel.create({
+            pondId,
             productName,
             cost,
             quantity,
             remark,
-            date,
-            userId: req.user.id,
+            date
         });
+
         res.status(201).json({ message: 'Income record created successfully', data: newIncome });
     } catch (error) {
         res.status(500).json({ message: 'Error creating income record', error: error.message });
     }
 };
+
 
 export const getAllIncome = async (req, res) => {
     try {
@@ -29,28 +31,27 @@ export const getAllIncome = async (req, res) => {
     }
 };
 
-export const getIncomeById = async (req, res) => {
+export const getIncomeByPond = async (req, res) => {
     try {
-        const income = await incomeModel.findById(req.params.id);
-        if (!income) {
-            return res.status(404).json({ message: 'Income record not found' });
-        }
-        res.status(200).json(income);
+        const { pondId } = req.params;
+        const incomes = await incomeModel.find({ pondId });
+        res.status(200).json(incomes);
     } catch (error) {
-        res.status(500).json({ message: 'Error fetching income record', error: error.message });
+        res.status(500).json({ message: 'Error fetching income records', error: error.message });
     }
 };
 
+
 export const updateIncome = async (req, res) => {
     try {
-        const { id } = req.params;
+        const { pondId } = req.params;
         const updateData = req.body;
         
-        console.log('Updating income with ID:', id);
+        console.log('Updating income with ID:', pondId);
         console.log('Update data:', updateData);
 
         const updatedIncome = await incomeModel.findByIdAndUpdate(
-            id,
+            pondId,
             updateData,
             { new: true, runValidators: true }
         );
@@ -81,28 +82,21 @@ export const deleteIncome = async (req, res) => {
 };
 
 export const createExpense = async (req, res) => {
-    const { productName, quantity, cost, remark, date } = req.body;
-
-    console.log('Request body:', req.body);
-
-    if (!req.user || !req.user.id) {
-        return res.status(401).json({ message: 'Unauthorized: User not found' });
-    }
-
     try {
-        const newExpense = new expenseModel({
+        const { pondId, productName, cost, quantity, remark, date } = req.body;
+
+        const newExpense = await expenseModel.create({
+            pondId,
             productName,
-            quantity,
             cost,
+            quantity,
             remark,
-            date,
-            userId: req.user.id,
+            date
         });
-        await newExpense.save();
+
         res.status(201).json({ message: 'Expense record created successfully', data: newExpense });
     } catch (error) {
-        console.error('Error creating expense:', error);
-        res.status(500).json({ message: 'Failed to create expense', error: error.message });
+        res.status(500).json({ message: 'Error creating expense record', error: error.message });
     }
 };
 
@@ -116,18 +110,15 @@ export const getAllExpenses = async (req, res) => {
     }
 };
 
-export const getExpenseById = async (req, res) => {
+export const getExpenseByPond = async (req, res) => {
     try {
-        const expense = await expenseModel.findById(req.params.id);
-        if (!expense) {
-            return res.status(404).json({ message: 'Expense record not found' });
-        }
-        res.status(200).json(expense);
+        const { pondId } = req.params;
+        const expenses = await expenseModel.find({ pondId });
+        res.status(200).json(expenses);
     } catch (error) {
-        res.status(500).json({ message: 'Error fetching expense record', error: error.message });
+        res.status(500).json({ message: 'Error fetching expense records', error: error.message });
     }
 };
-
 export const updateExpense = async (req, res) => {
     try {
         const updatedExpense = await expenseModel.findByIdAndUpdate(

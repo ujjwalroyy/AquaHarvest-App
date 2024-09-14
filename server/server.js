@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import cloudinary from "cloudinary";
 import session from "express-session";
 import passport from './config/auth.js';
+import Razorpay from 'razorpay'
 // import './config/auth.js';
 
 dotenv.config();
@@ -55,6 +56,8 @@ import protectedRoutes from "./routes/protectedRoutes.js";
 import pondRoutes from "./routes/pondRoutes.js"
 import expenseIncomeRoutes from './routes/expenseIncomeRoutes.js'
 import passbookRoutes from './routes/passbookRoutes.js'
+import paymentRoutes from './routes/paymentRoutes.js'
+import pondTestRoutes from './routes/pondTestRoutes.js'
 app.use("/api/v1", test1);
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/product", productRoutes);
@@ -64,6 +67,8 @@ app.use('/api', protectedRoutes);
 app.use('/api/v1/pond', pondRoutes)
 app.use('/api/v1/expense-income', expenseIncomeRoutes)
 app.use('/api/v1/passbook', passbookRoutes);
+app.use("/api/v1/payment", paymentRoutes)
+app.use("/api/v1",pondTestRoutes)
 
 // app.get("/", (req, res) => {
 //   return res.status(200).send("<h1> Welcome to server<h1/>");
@@ -73,6 +78,11 @@ app.use('/api/v1/passbook', passbookRoutes);
 //     console.error(err.stack);
 //     res.status(500).send('Something broke!');
 //   });
+
+export const instance = new Razorpay({
+  key_id: process.env.RAZORPAY_API_KEY,
+  key_secret: process.env.RAZORPAY_API_SECRET
+})
 
 const PORT = process.env.PORT || 5050;
 

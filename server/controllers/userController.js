@@ -298,16 +298,16 @@ export const googleLogoutController = (req, res) => {
 
 export const loginController = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { phone, password } = req.body;
 
-    if (!email || !password) {
+    if (!phone || !password) {
       return res.status(400).json({
         success: false,
-        message: "Please add email and password.",
+        message: "Please add Phone no. and password.",
       });
     }
 
-    const user = await userModel.findOne({ email });
+    const user = await userModel.findOne({ phone });
     if (!user) {
       return res.status(404).json({
         success: false,
