@@ -696,25 +696,25 @@ export const updatePasswordController = async (req, res) =>{
 export const updateProfilePic = async(req, res) => {
     try {
       const user = await userModel.findById(req.user._id)
-      if (!user) {
-        return res.status(404).send({
-            success: false,
-            message: 'User not found'
-        });
-    }
-    if (!req.file) {
-      return res.status(400).send({
-          success: false,
-          message: 'No file uploaded',
-      });
-  }
+  //     if (!user) {
+  //       return res.status(404).send({
+  //           success: false,
+  //           message: 'User not found'
+  //       });
+  //   }
+  //   if (!req.file) {
+  //     return res.status(400).send({
+  //         success: false,
+  //         message: 'No file uploaded',
+  //     });
+  // }
 
-      //get file grom user
       const file = getDataUri(req.file)
-      //delete prev image
-      if (user.profilePic && user.profilePic.public_id) {
-        await cloudinary.v2.uploader.destroy(user.profilePic.public_id);
-      }
+      await cloudinary.v2.destroy(user.profilePic.public_id)
+
+      // if (user.profilePic && user.profilePic.public_id) {
+      //   await cloudinary.v2.uploader.destroy(user.profilePic.public_id);
+      // }
       // await cloudinary.v2.uploader.destroy(user.profilePic.public_id)
       //update
       const cdb = await cloudinary.v2.uploader.upload(file.content)

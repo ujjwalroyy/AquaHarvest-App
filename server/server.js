@@ -61,7 +61,7 @@ import pondTestRoutes from './routes/pondTestRoutes.js'
 app.use("/api/v1", test1);
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/product", productRoutes);
-app.use("/api/v1/cat", categoryRoutes);
+app.use("/api/v1/category", categoryRoutes);
 app.use('/auth', authRoute);
 app.use('/api', protectedRoutes);
 app.use('/api/v1/pond', pondRoutes)

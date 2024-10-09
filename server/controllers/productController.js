@@ -1,13 +1,38 @@
+import { query } from "express";
 import productModel from "../models/productModel.js";
 import { getDataUri } from "../utils/features.js";
 import cloudinary from "cloudinary";
+import categoryModel from "../models/categoryModel.js";
 //Get All Product
 export const getAllProductController = async (req, res) => {
+  const { keyword, category } = req.query;
   try {
-    const products = await productModel.find({});
+    // Build the query object
+    const query = {
+      name: {
+        $regex: keyword ? keyword : "",
+        $options: "i",
+      },
+    };
+
+    // Add category filtering if provided
+    if (category) {
+      query.category = category; // Assuming category is an ObjectId, adjust as necessary
+    }
+
+    const products = await productModel.find(query).populate("category");
+
+    if (products.length === 0) {
+      return res.status(404).send({
+        success: false,
+        message: "No products found for the given search criteria.",
+      });
+    }
+
     res.status(200).send({
       success: true,
-      message: "all product fetched successfully",
+      message: "All products fetched successfully",
+      totalProduct: products.length,
       products,
     });
   } catch (error) {
@@ -23,7 +48,6 @@ export const getAllProductController = async (req, res) => {
 //get single product
 export const getSingleProductController = async (req, res) => {
   try {
-    //get product id
     const product = await productModel.findById(req.params.id);
     if (!product) {
       return res.status(404).send({
@@ -56,52 +80,73 @@ export const getSingleProductController = async (req, res) => {
 //create product
 export const createProductController = async (req, res) => {
   try {
-    const { name, description, price, category, stock } = req.body;
-    //validation
-    // if (!name || !description || !price || !stock) {
-    //   return res.status(500).send({
-    //     success: false,
-    //     message: "Please provide all fields",
-    //   });
-    // }
-    if (!req.file) {
-      return res.status(500).send({
+    const { name, description, price, category: categoryName, images } = req.body;
+
+    // Validate required fields
+    if (!name || !description || !price || !categoryName) {
+      return res.status(400).send({
         success: false,
-        message: "please provide product images",
+        message: "Please provide all fields",
       });
     }
-    const file = getDataUri(req.file);
-    const cdb = await cloudinary.v2.uploader.upload(file.content);
-    const image = {
-      public_id: cdb.public_id,
-      url: cdb.secure_url,
-    };
+
+    // Fetch the category ObjectId from the database
+    let category = await categoryModel.findOne({ name: categoryName }); // Ensure you're using the correct field
+
+    // If category does not exist, create a new one
+    if (!category) {
+      category = await categoryModel.create({ name: categoryName }); // Ensure you're providing the name field
+    }
+
+    const imageData = [];
+
+    // Handle uploaded file (if exists)
+    if (req.file) {
+      const file = getDataUri(req.file);
+      const cdb = await cloudinary.v2.uploader.upload(file);
+      imageData.push({
+        public_id: cdb.public_id,
+        url: cdb.secure_url,
+      });
+    }
+
+    // Handle images URLs (if provided)
+    if (images) {
+      const imageUrls = Array.isArray(images) ? images : [images];
+      imageUrls.forEach((image) => {
+        imageData.push({
+          public_id: image.split('/').pop().split('.')[0],
+          url: image,
+        });
+      });
+    }
+
+    // Create product in the database
     await productModel.create({
       name,
       description,
       price,
-      category,
-      stock,
-      images: [image],
+      category: category._id, // Use the fetched or newly created ObjectId
+      images: imageData,
     });
+
     res.status(201).send({
       success: true,
-      message: "product Created Successfully",
+      message: "Product created successfully",
+      
     });
   } catch (error) {
     console.log(error);
     res.status(500).send({
       success: false,
-      message: "Error in geting single product API",
-      error,
+      message: "Error in creating product",
+      error: error.message || error,
     });
   }
 };
 
-// update product
 export const updateProductController = async (req, res) => {
   try {
-    //find product
     const product = await productModel.findById(req.params.id);
     if (!product) {
       return res.status(404).send({
@@ -147,10 +192,8 @@ export const updateProductController = async (req, res) => {
   }
 };
 
-//update product image
 export const updateProductImageCntroller = async (req, res) => {
   try {
-    //find product
     const product = await productModel.findById(req.params.id);
     if (!product) {
       return res.status(404).send({
@@ -159,17 +202,19 @@ export const updateProductImageCntroller = async (req, res) => {
       });
     }
     if (!req.file) {
-      return res.status(404).send({
+      return res.status(400).send({
         success: false,
-        message: "Product image not found",
+        message: "No image file uploaded",
       });
     }
+
     const file = getDataUri(req.file);
     const cdb = await cloudinary.v2.uploader.upload(file.content);
     const image = {
       public_id: cdb.public_id,
       url: cdb.secure_url,
     };
+
     product.images.push(image);
     await product.save();
     res.status(200).send({
@@ -178,7 +223,7 @@ export const updateProductImageCntroller = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    if (error.name == "CastError") {
+    if (error.name === "CastError") {
       return res.status(500).send({
         success: false,
         message: "Invalid Id",
@@ -186,13 +231,12 @@ export const updateProductImageCntroller = async (req, res) => {
     }
     res.status(500).send({
       success: false,
-      message: "Error in update product API",
+      message: "Error in update product image API",
       error,
     });
   }
 };
 
-//Delete product
 export const deleteProductImageController = async (req, res) => {
   try {
     const product = await productModel.findById(req.params.id);
@@ -202,7 +246,6 @@ export const deleteProductImageController = async (req, res) => {
         message: "Product not found",
       });
     }
-    //image id find
     const id = req.query.id;
     if (!id) {
       return res.status(404).send({
@@ -220,7 +263,6 @@ export const deleteProductImageController = async (req, res) => {
         message: "Image not found",
       });
     }
-    // delete
     await cloudinary.v2.uploader.destroy(product.images[isExist].public_id);
     product.images.splice(isExist, 1);
     await product.save();
@@ -244,10 +286,8 @@ export const deleteProductImageController = async (req, res) => {
   }
 };
 
-//delete product
 export const deleteProductController = async (req, res) => {
   try {
-    //find product
     const product = await productModel.findById(req.params.id);
     if (!product) {
       return res.status(404).send({
@@ -255,18 +295,20 @@ export const deleteProductController = async (req, res) => {
         message: "Product not found",
       });
     }
-    //find and delete
-    for (let index = 0; index < product.length; index++) {
-      await cloudinary.v2.uploader.destroy(product.images[index].public_id);
+
+    // Delete each image from Cloudinary
+    for (const image of product.images) {
+      await cloudinary.v2.uploader.destroy(image.public_id);
     }
-    await product.deleteOne();
+
+    await product.deleteOne(); // Use deleteOne to delete the product
     res.status(200).send({
       success: true,
       message: "Product deleted successfully",
     });
   } catch (error) {
     console.log(error);
-    if (error.name == "CastError") {
+    if (error.name === "CastError") {
       return res.status(500).send({
         success: false,
         message: "Invalid Id",
@@ -274,7 +316,7 @@ export const deleteProductController = async (req, res) => {
     }
     res.status(500).send({
       success: false,
-      message: "Error in delete product image API",
+      message: "Error in delete product API",
       error,
     });
   }

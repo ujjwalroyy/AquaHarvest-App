@@ -310,7 +310,8 @@ export default function HomeScreen(props) {
           onPress={() => navigation.navigate("Market")}>
             <Text style={styles.navButtonText}>MARKET</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navButton}>
+          <TouchableOpacity style={styles.navButton}
+          onPress={() => navigation.navigate("Inventory")}>
             <Text style={styles.navButtonText}>INVENTORY</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.navButton}>

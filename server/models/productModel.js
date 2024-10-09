@@ -13,10 +13,10 @@ const productSchema = new mongoose.Schema({
         type:Number,
         required:[true, 'product price is required']
     },
-    stock:{
-        type:Number,
-        required:[true, 'product stock is required']
-    },
+    // stock:{
+    //     type:Number,
+    //     required:[true, 'product stock is required']
+    // },
     category:{
         type: mongoose.Schema.Types.ObjectId,
         ref:'Category'

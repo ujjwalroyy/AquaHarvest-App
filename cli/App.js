@@ -11,11 +11,15 @@ import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
 import ProfileScreen from "./screens/ProfileSection/ProfileScreen.js";
 import FarmInventory from './screens/HOME/FarmInventory.js'
 import Pond from './screens/HOME/Pond/Pond.js'
-import Market from './screens/HOME/MarketHome.js'
+import Market from './screens/Market/MarketHome.js'
 import PondReport from "./screens/HOME/Pond/PondReport.js";
 import PondInventory from "./screens/HOME/Pond/PondInventory.js";
 import PondTest from "./screens/HOME/Pond/PondTest.js";
 import PassbookInventory from "./screens/HOME/Pond/PassbookInventory.js";
+import Inventory from './screens/HOME/Inventory/inventory.js'
+import Notifications from './screens/Market/Notifications.js'
+import Categories from './screens/Market/Category.js'
+import ProductDetails from './screens/Market/ProductDetails.js'
 
 const toastConfig = {
   success: (props) => (
@@ -73,11 +77,15 @@ const Continue = () => (
     <Stack.Screen name="Profile" component={ProfileScreen} />
     <Stack.Screen name="Farm" component={FarmInventory} />
     <Stack.Screen name="Pond" component={Pond} />
+    <Stack.Screen name="Inventory" component={Inventory} />
     <Stack.Screen name="Market" component={Market} />
     <Stack.Screen name="PondReport" component={PondReport} />
     <Stack.Screen name="PondInventory" component={PondInventory} />
     <Stack.Screen name="PondTest" component={PondTest} />
     <Stack.Screen name="PassbookInventory" component={PassbookInventory}/>
+    <Stack.Screen name="ProductDetails" component={ProductDetails}/>
+    <Stack.Screen name="Notifications" component={Notifications}/>
+    <Stack.Screen name="Category" component={Categories}/>
     <Stack.Screen name="LoginNav" component={LoginNav} />
   </Stack.Navigator>
 );
