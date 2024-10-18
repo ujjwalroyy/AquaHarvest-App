@@ -4,6 +4,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { MaterialCommunityIcons } from '@expo/vector-icons'; // If you want to use icons
+
 
 export default function ProfileScreen() {
   const [name, setName] = useState('');
@@ -12,7 +14,7 @@ export default function ProfileScreen() {
   const [country, setCountry] = useState('');
   const [state, setState] = useState('');
   const [city, setCity] = useState('');
-  const [profilePic, setProfilePic] = useState(null);
+  const [profilePic, setProfilePic] = useState('');
   const [dob, setDob] = useState('');
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -98,17 +100,33 @@ export default function ProfileScreen() {
     setPhotoModalVisible(false);
   };
 
-  const handleSaveProfile = async () => {
+  const handleSaveProfile = async (updatedData) => {
     try {
-      const profileData = { name, email, phone, country, state, city, dob };
-
-      Object.keys(profileData).forEach(key => (profileData[key] == null || profileData[key] === '') && delete profileData[key]);
-
-      const response = await updateProfile(profileData);
-      Alert.alert('Success', response.message);
-      setEditModalVisible(false);
+      const token = await AsyncStorage.getItem('token');
+      if (!token) throw new Error('No token found');
+  
+      // Update only the passed fields
+      const profileData = { ...updatedData };
+  
+      // Ensure the profileData is not empty
+      Object.keys(profileData).forEach(key => {
+        if (profileData[key] == null || profileData[key] === '') {
+          delete profileData[key];
+        }
+      });
+  
+      // Make the API call to update profile
+      const response = await axios.put('http://192.168.43.60:5050/api/v1/user/profile-update', profileData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      if (response.data.success) {
+        Alert.alert('Success', 'Profile updated successfully.');
+      } else {
+        Alert.alert('Error', response.data.message || 'Failed to update profile.');
+      }
     } catch (error) {
-      console.error('Failed to update profile:', error.response ? error.response.data : error.message);
+      console.error('Error updating profile:', error.response ? error.response.data : error.message);
       Alert.alert('Error', 'Failed to update profile.');
     }
   };
@@ -131,11 +149,12 @@ export default function ProfileScreen() {
 
   const handleUpdateProfilePic = async (photo) => {
     try {
+      console.log('Uploading photo with uri:', photo.uri);
       const formData = new FormData();
       formData.append('file', {
         uri: photo.uri,
-        name: photo.fileName || 'photo.jpg',
-        type: photo.type || 'image/jpeg',
+        name: 'photo.jpg', // Changed to .jpg for consistency
+        type: 'image/jpeg',
       });
 
       const token = await AsyncStorage.getItem('token');
@@ -144,9 +163,11 @@ export default function ProfileScreen() {
       const response = await axios.put('http://192.168.43.60:5050/api/v1/user/profile-picture', formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'multipart/form-data', 
         },
       });
+
+      console.log('Response:', response.data); 
 
       if (response.data.success) {
         setProfilePic(response.data.profilePic.url);
@@ -224,7 +245,7 @@ export default function ProfileScreen() {
           <View style={styles.profileImageContainer}>
             <Animated.View style={[styles.profileImageBorder, { borderColor: borderColorInterpolation }]}>
               <Image
-                source={profilePic ? { uri: profilePic } : null}
+                source={profilePic ? { uri: profilePic.url } : null}
                 style={styles.profileImage}
               />
             </Animated.View>
@@ -291,70 +312,107 @@ export default function ProfileScreen() {
         </View>
 
         <Modal
-          visible={isPhotoModalVisible}
-          transparent
-          animationType="slide"
-          onRequestClose={() => setPhotoModalVisible(false)}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Button title="Pick an image from gallery" onPress={pickImage} />
-              <Button title="Cancel" onPress={() => setPhotoModalVisible(false)} />
-            </View>
-          </View>
-        </Modal>
+  visible={isPhotoModalVisible}
+  transparent
+  animationType="slide"
+  onRequestClose={() => setPhotoModalVisible(false)}
+>
+  <View style={styles.modalContainer}>
+    <View style={styles.modalContent}>
+      <MaterialCommunityIcons name="image" size={50} color="#007bff" />
+      <Text style={styles.modalTitle}>Select a Photo</Text>
+      <Text style={styles.modalSubtitle}>Choose an image from your gallery</Text>
+      
+      <TouchableOpacity style={styles.imgButton} onPress={pickImage}>
+        <Text style={styles.buttonText}>Pick from Gallery</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.cancelImgButton} onPress={() => setPhotoModalVisible(false)}>
+        <Text style={styles.buttonText}>Cancel</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
+
+
 
         <Modal
-          visible={isEditModalVisible}
-          transparent
-          animationType="slide"
-          onRequestClose={() => setEditModalVisible(false)}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <TextInput
-                style={styles.input}
-                value={newValue}
-                onChangeText={setNewValue}
-              />
-              <Button title="Save" onPress={() => {
-                if (editField) {
-                  const updatedData = { [editField]: newValue };
-                  handleSaveProfile(updatedData);
-                }
-              }} />
-              <Button title="Cancel" onPress={() => setEditModalVisible(false)} />
-            </View>
-          </View>
-        </Modal>
+  visible={isEditModalVisible}
+  transparent
+  animationType="slide"
+  onRequestClose={() => setEditModalVisible(false)}
+>
+  <View style={styles.modalContainer}>
+    <View style={styles.modalContent}>
+      <TextInput
+        style={styles.modalInput}
+        value={newValue}
+        onChangeText={setNewValue}
+        placeholder={`Edit ${editField}`} // Optional placeholder for clarity
+      />
+      <View style={styles.buttonContainer}>
+        <View style={styles.buttonWrapper}>
+          <Button 
+            title="Save" 
+            onPress={() => {
+              if (editField && newValue.trim() !== '') { // Check for empty value
+                const updatedData = { [editField]: newValue };
+                handleSaveProfile(updatedData);
+                setEditModalVisible(false); // Close modal on save
+              } else {
+                alert('Please enter a valid value.'); // Alert for invalid input
+              }
+            }} 
+            color="#4CAF50" // Save button color (green)
+          />
+        </View>
+        <View style={styles.buttonWrapper}>
+          <Button 
+            title="Cancel" 
+            onPress={() => setEditModalVisible(false)} 
+            color="#F44336" // Cancel button color (red)
+          />
+        </View>
+      </View>
+    </View>
+  </View>
+</Modal>
 
-        <Modal
-          visible={passwordModalVisible}
-          transparent
-          animationType="slide"
-          onRequestClose={() => setPasswordModalVisible(false)}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <TextInput
-                style={styles.input}
-                placeholder="Old Password"
-                secureTextEntry
-                value={oldPassword}
-                onChangeText={setOldPassword}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="New Password"
-                secureTextEntry
-                value={newPassword}
-                onChangeText={setNewPassword}
-              />
-              <Button title="Save" onPress={handleSavePassword} />
-              <Button title="Cancel" onPress={() => setPasswordModalVisible(false)} />
-            </View>
-          </View>
-        </Modal>
+
+<Modal
+  visible={passwordModalVisible}
+  transparent
+  animationType="slide"
+  onRequestClose={() => setPasswordModalVisible(false)}
+>
+  <View style={styles.modalContainer}>
+    <View style={styles.modalContent}>
+      <Text style={styles.modalHeader}>Change Password</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Old Password"
+        secureTextEntry
+        value={oldPassword}
+        onChangeText={setOldPassword}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="New Password"
+        secureTextEntry
+        value={newPassword}
+        onChangeText={setNewPassword}
+      />
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.button} onPress={handleSavePassword}>
+          <Text style={styles.buttonText}>Save</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={() => setPasswordModalVisible(false)}>
+          <Text style={styles.buttonText}>Cancel</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
       </ScrollView>
     </LinearGradient>
   );
@@ -451,21 +509,110 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Darkened background overlay
   },
   modalContent: {
-    width: '80%',
+    width: '85%', // Adjusted width
     padding: 20,
-    backgroundColor: 'white',
-    borderRadius: 10,
+    backgroundColor: '#ffffff',
+    borderRadius: 15, // Smoother rounded corners
+    borderColor: '#ccc', // Soft border color for the modal
+    borderWidth: 1, // Added border around modal
+    elevation: 5, // Shadow for Android
+    shadowColor: '#000', // Shadow for iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  imgButton: {
+    width: '100%',
+    height: 50,
+    backgroundColor: '#007bff', // Blue for action button
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+    marginBottom: 15,
   },
   modalInput: {
     width: '100%',
-    padding: 15,
-    marginVertical: 10,
-    backgroundColor: '#ffffff',
+    padding: 10,
+    marginBottom: 20, // Spacing below the input
+    backgroundColor: '#F0F0F0', // Softer background color for input
     borderRadius: 10,
-    borderColor: '#1E88E5',
-    borderWidth: 1,
+    borderColor: '#1E88E5', // Slightly bright blue border
+    borderWidth: 1.5,
+    fontSize: 16,
+    color: '#333',
   },
+  input: {
+    width: '100%',
+    height: 50,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 12,
+    marginBottom: 15,
+    paddingHorizontal: 15,
+    fontSize: 16,
+    backgroundColor: '#f9f9f9',
+  },
+  cancelImgButton: {
+    width: '100%',
+    height: 50,
+    backgroundColor: '#dc3545', // Red for cancel button
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  buttonContainer: {
+    flexDirection: 'row', // Row layout for buttons
+    justifyContent: 'space-between', // Space between the buttons
+  },
+  buttonWrapper: {
+    flex: 1, // Equal button width
+    marginHorizontal: 5, // Spacing between buttons
+  },
+  button: {
+    flex: 1,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 12,
+    marginHorizontal: 5,
+    backgroundColor: '#007BFF',
+  },
+  modalHeader: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 20,
+  },
+  cancelButton: {
+    backgroundColor: '#dc3545',
+  },
+  cancelImgButton: {
+    width: '100%',
+    height: 50,
+    backgroundColor: '#dc3545', // Red for cancel button
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  
 });

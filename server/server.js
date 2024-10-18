@@ -58,6 +58,8 @@ import expenseIncomeRoutes from './routes/expenseIncomeRoutes.js'
 import passbookRoutes from './routes/passbookRoutes.js'
 import paymentRoutes from './routes/paymentRoutes.js'
 import pondTestRoutes from './routes/pondTestRoutes.js'
+import adminRoutes from './routes/adminRoutes.js'
+import farmInventoryRoutes from './routes/farmInventoryRoutes.js'
 app.use("/api/v1", test1);
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/product", productRoutes);
@@ -69,6 +71,8 @@ app.use('/api/v1/expense-income', expenseIncomeRoutes)
 app.use('/api/v1/passbook', passbookRoutes);
 app.use("/api/v1/payment", paymentRoutes)
 app.use("/api/v1",pondTestRoutes)
+app.use("/api/v3/admin", adminRoutes)
+app.use("/api/v1/inventory", farmInventoryRoutes)
 
 // app.get("/", (req, res) => {
 //   return res.status(200).send("<h1> Welcome to server<h1/>");

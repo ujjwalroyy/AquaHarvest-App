@@ -159,22 +159,6 @@ function LoginPage() {
     };
   }, []);
 
-
-  // const checkToken = async () => {
-  //   try {
-  //     const token = await AsyncStorage.getItem('token');
-  //     if (token) {
-  //       // Token exists, proceed to authenticated area
-  //       console.log('Token:', token);
-  //     } else {
-  //       // No token, redirect to login
-  //       console.log('No token found');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error checking token:', error);
-  //   }
-  // };
-
   function handleEmail(e) {
     const emailVar = e.nativeEvent.text;
     setEmail(emailVar);
@@ -337,71 +321,72 @@ function LoginPage() {
           </Modal>
 
           <Modal
-            transparent={true}
-            visible={isOtpModalVisible}
-            onRequestClose={() => setOtpModalVisible(false)}
+  transparent={true}
+  visible={isOtpModalVisible}
+  onRequestClose={() => setOtpModalVisible(false)}
+>
+  <View style={styles.modalBackground}>
+    <ScrollView contentContainerStyle={styles.modalContainer}>
+      {verificationMethod === 'contact' ? (
+        <>
+          <Text style={styles.modalTitle}>Verify via Phone</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter Phone Number"
+            keyboardType="phone-pad"
+            maxLength={13}
+            value={phone}
+            onChangeText={setPhone}
+          />
+          <TouchableOpacity
+            onPress={handleSendOtp}
+            style={styles.modalButton}
           >
-            <View style={styles.modalBackground}>
-              <ScrollView contentContainerStyle={styles.modalContainer}>
-                {verificationMethod === 'contact' ? (
-                  <>
-                    <Text style={styles.modalTitle}>Verify via Phone</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Enter Phone Number"
-                      keyboardType="phone-pad"
-                      maxLength={13}
-                      value={phone}
-                      onChangeText={setPhone}
-                    />
-                    <TouchableOpacity
-                      onPress={handleSendOtp}
-                      style={styles.modalButton}
-                    >
-                      <Text style={styles.modalButtonText}>Send OTP</Text>
-                    </TouchableOpacity>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Enter OTP"
-                      keyboardType="numeric"
-                      maxLength={6}
-                      value={otp}
-                      onChangeText={setOtp}
-                    />
-                    <TouchableOpacity
-                      onPress={handleSubmitOtp}
-                      style={styles.modalButton}
-                    >
-                      <Text style={styles.modalButtonText}>Submit OTP</Text>
-                    </TouchableOpacity>
-                  </>
-                ) : (
-                  <>
-                    <Text style={styles.modalTitle}>Verify via Email</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Enter Email"
-                      keyboardType="email-address"
-                      value={email}
-                      onChangeText={setEmail}
-                    />
-                    <TouchableOpacity
-                      onPress={handleSendResetLink}
-                      style={styles.modalButton}
-                    >
-                      <Text style={styles.modalButtonText}>Send Reset Link</Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-                <TouchableOpacity
-                  onPress={() => setOtpModalVisible(false)}
-                  style={styles.modalCloseButton}
-                >
-                  <Text style={styles.modalCloseButtonText}>Close</Text>
-                </TouchableOpacity>
-              </ScrollView>
-            </View>
-          </Modal>
+            <Text style={styles.modalButtonText}>Send OTP</Text>
+          </TouchableOpacity>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter OTP"
+            keyboardType="numeric"
+            maxLength={6}
+            value={otp}
+            onChangeText={setOtp}
+          />
+          <TouchableOpacity
+            onPress={handleSubmitOtp}
+            style={styles.modalButton}
+          >
+            <Text style={styles.modalButtonText}>Submit OTP</Text>
+          </TouchableOpacity>
+        </>
+      ) : (
+        <>
+          <Text style={styles.modalTitle}>Verify via Email</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter Email"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <TouchableOpacity
+            onPress={handleSendResetLink}
+            style={styles.modalButton}
+          >
+            <Text style={styles.modalButtonText}>Send Reset Link</Text>
+          </TouchableOpacity>
+        </>
+      )}
+      <TouchableOpacity
+        onPress={() => setOtpModalVisible(false)}
+        style={styles.modalCloseButton}
+      >
+        <Text style={styles.modalCloseButtonText}>Close</Text>
+      </TouchableOpacity>
+    </ScrollView>
+  </View>
+</Modal>
+
 
           <View style={styles.bottomButton}>
             <View style={{ alignItems: "center", justifyContent: "center" }}>
@@ -421,7 +406,7 @@ function LoginPage() {
             <View style={{ alignItems: "center", justifyContent: "center" }}>
               <TouchableOpacity
                 style={styles.inBut2}
-                onPress={handleGoogleLogin}
+                onPress={() => Alert.alert("Coming Soon", "This feature is under development.")} 
               >
                 <FontAwesome
                   name="google"

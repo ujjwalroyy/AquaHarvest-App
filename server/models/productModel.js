@@ -13,19 +13,19 @@ const productSchema = new mongoose.Schema({
         type:Number,
         required:[true, 'product price is required']
     },
-    // stock:{
-    //     type:Number,
-    //     required:[true, 'product stock is required']
-    // },
+    phone:{
+        type:Number,
+        required:[true, 'Phone is required']
+    },
     category:{
         type: mongoose.Schema.Types.ObjectId,
         ref:'Category'
     },
-    images:[
-        {
-            public_id: String,
-            url: String,
-        },
+    images: [
+      {
+        public_id: { type: String, required: true },
+        url: { type: String, required: true },
+      },
     ],
 },{timestamps: true})
 

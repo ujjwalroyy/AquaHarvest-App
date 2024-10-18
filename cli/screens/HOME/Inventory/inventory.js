@@ -1,71 +1,76 @@
-import React, { useState, useEffect } from 'react'; 
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   TextInput,
-  Button,
   TouchableOpacity,
   FlatList,
   Modal,
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import { getPondDetails } from './pondsDetail.js'; // Import the function
+import axios from 'axios'
 
-const Inventory = () => {
+const Inventory = ({ navigation }) => {
   const [expenses, setExpenses] = useState([]);
   const [income, setIncome] = useState([]);
   const [productName, setProductName] = useState('');
   const [quantity, setQuantity] = useState('');
   const [cost, setCost] = useState('');
   const [transactionType, setTransactionType] = useState('Expense');
-  const [selectedRecord, setSelectedRecord] = useState(null); // For editing
-  const [pondDetails, setPondDetails] = useState([]);
+  const [selectedRecord, setSelectedRecord] = useState(null); 
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [showAllDetails, setShowAllDetails] = useState(false); // To control "Show More/Less"
+  const [showAllDetails, setShowAllDetails] = useState(false); 
 
-  useEffect(() => {
-    const fetchPondDetails = async () => {
-      try {
-        const details = await getPondDetails();
-        setPondDetails(details);
-      } catch (error) {
-        console.error('Error fetching pond details:', error);
-      }
-    };
-    fetchPondDetails();
-  }, []);
 
-  const addTransaction = () => {
+  const addTransaction = async () => {
     const record = {
       productName,
       quantity,
       cost,
       type: transactionType,
     };
-
-    if (selectedRecord) {
-      if (selectedRecord.type === 'Expense') {
-        setExpenses(expenses.map((item) =>
-          item === selectedRecord ? record : item
-        ));
+  
+    try {
+      if (selectedRecord) {
+        const response = await axios.put(`http://192.168.43.60:5050/api/v1/inventory/update/${selectedRecord._id}`, record); 
+        if (transactionType === 'Expense') {
+          setExpenses(expenses.map((item) => (item._id === selectedRecord._id ? response.data : item)));
+        } else {
+          setIncome(income.map((item) => (item._id === selectedRecord._id ? response.data : item)));
+        }
       } else {
-        setIncome(income.map((item) =>
-          item === selectedRecord ? record : item
-        ));
+        const response = await axios.post('http://192.168.43.60:5050/api/v1/inventory/create', record); 
+        if (transactionType === 'Expense') {
+          setExpenses([...expenses, response.data]);
+        } else {
+          setIncome([...income, response.data]);
+        }
       }
-      setSelectedRecord(null); // Reset the selected record after editing
-    } else {
-      if (transactionType === 'Expense') {
-        setExpenses([...expenses, record]);
-      } else {
-        setIncome([...income, record]);
-      }
+    } catch (error) {
+      console.error('Error adding/updating transaction:', error);
     }
-
-    resetInputs(); // Reset inputs after adding or editing
+  
+    resetInputs();
     setIsModalVisible(false);
   };
+
+  useEffect(() => {
+    const fetchRecords = async () => {
+      try {
+        const response = await axios.get('http://192.168.43.60:5050/api/v1/inventory/get-all');
+        console.log('Fetched records:', response.data); 
+        setExpenses(response.data.filter(item => item.type === 'Expense'));
+        setIncome(response.data.filter(item => item.type === 'Income'));
+      } catch (error) {
+        console.error('Error fetching records:', error);
+      }
+    };
+    fetchRecords();
+  }, []);
+
+  
+  
 
   const resetInputs = () => {
     setProductName('');
@@ -87,7 +92,8 @@ const Inventory = () => {
 
   const profitOrLoss = calculateProfitOrLoss();
   const profitOrLossStyle = profitOrLoss >= 0 ? styles.profitText : styles.lossText;
-  const profitOrLossText = profitOrLoss >= 0 ? ' Profit' : 'Loss';
+  const profitOrLossText = profitOrLoss >= 0 ? 'Profit' : 'Loss';
+
 
   const renderRecord = ({ item, index }) => (
     <View style={styles.tableRow}>
@@ -112,17 +118,6 @@ const Inventory = () => {
     </View>
   );
 
-  const renderPondDetail = ({ item }) => (
-    <View style={styles.row}>
-      <Text style={styles.cell}>{item.pondName}</Text>
-      <Text style={styles.cell}>{item.expense}</Text>
-      <Text style={styles.cell}>{item.income}</Text>
-      <Text style={[styles.cell, item.profitOrLoss >= 0 ? styles.profit : styles.loss]}>
-        {item.profitOrLoss}
-      </Text>
-    </View>
-  );
-
   const visibleRecords = showAllDetails ? [...expenses, ...income] : [...expenses, ...income].slice(0, 5);
 
   return (
@@ -132,31 +127,56 @@ const Inventory = () => {
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Your Farm is in</Text>
         <Text style={profitOrLossStyle}>
-          {profitOrLossText}: {profitOrLoss} INR
+          {profitOrLossText}: {profitOrLoss.toFixed(2)} INR
         </Text>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('Dashboard', { 
+            profitOrLoss, 
+            income: calculateTotalIncome(), 
+            expenses: calculateTotalExpense() 
+          })}>
+          <Text style={styles.dashboardLink}>Dashboard</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Pond Details</Text>
-        <View style={styles.headerRow}>
-          <Text style={styles.headerCell}>Pond Name</Text>
-          <Text style={styles.headerCell}>Expense</Text>
-          <Text style={styles.headerCell}>Income</Text>
-          <Text style={styles.headerCell}>Profit/Loss</Text>
+        <Text style={styles.sectionTitle}>Income Details</Text>
+        <View style={styles.tableHeader}>
+          <Text style={styles.tableHeaderCell}>S.No</Text>
+          <Text style={styles.tableHeaderCell}>Product Name</Text>
+          <Text style={styles.tableHeaderCell}>Quantity</Text>
+          <Text style={styles.tableHeaderCell}>Cost</Text>
+          <Text style={styles.tableHeaderCell}>Action</Text>
         </View>
+
         <FlatList
-          data={pondDetails}
-          renderItem={renderPondDetail}
+          data={income}
+          renderItem={renderRecord}
           keyExtractor={(item, index) => index.toString()}
         />
       </View>
 
-      {/* Modal for Adding Income/Expense */}
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionTitle}>Expense Details</Text>
+        <View style={styles.tableHeader}>
+          <Text style={styles.tableHeaderCell}>S.No</Text>
+          <Text style={styles.tableHeaderCell}>Product Name</Text>
+          <Text style={styles.tableHeaderCell}>Quantity</Text>
+          <Text style={styles.tableHeaderCell}>Cost</Text>
+          <Text style={styles.tableHeaderCell}>Action</Text>
+        </View>
+
+        <FlatList
+          data={expenses}
+          renderItem={renderRecord}
+          keyExtractor={(item, index) => index.toString()}
+        />
+      </View>
+
       <Modal visible={isModalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Add {transactionType}</Text>
-
             <TextInput
               placeholder="Product Name"
               value={productName}
@@ -177,7 +197,6 @@ const Inventory = () => {
               keyboardType="numeric"
               style={styles.input}
             />
-
             <View style={styles.modalButtonsContainer}>
               <TouchableOpacity style={styles.submitButton} onPress={addTransaction}>
                 <Text style={styles.submitButtonText}>Submit</Text>
@@ -190,65 +209,35 @@ const Inventory = () => {
         </View>
       </Modal>
 
-      <View style={styles.transactionDetails}>
-        <Text style={styles.sectionTitle}>Farm Details</Text>
-        <View style={styles.tableHeader}>
-          <Text style={styles.tableHeaderCell}>S.No</Text>
-          <Text style={styles.tableHeaderCell}>Product Name</Text>
-          <Text style={styles.tableHeaderCell}>Quantity</Text>
-          <Text style={styles.tableHeaderCell}>Cost</Text>
-          <Text style={styles.tableHeaderCell}>Type</Text>
-          <Text style={styles.tableHeaderCell}>Action</Text>
-        </View>
-
-        <FlatList
-          data={visibleRecords}
-          renderItem={renderRecord}
-          keyExtractor={(item, index) => index.toString()}
-        />
-
-        {expenses.length + income.length > 5 && (
-          <TouchableOpacity
-            style={styles.showMoreButton}
-            onPress={() => setShowAllDetails(!showAllDetails)}
-          >
-            <Text style={styles.showMoreText}>{showAllDetails ? 'Show Less' : 'Show More'}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.addButton, styles.expenseButton]}
           onPress={() => {
             setTransactionType('Expense');
-            setSelectedRecord(null); // Ensure no record is selected for new entry
+            setSelectedRecord(null);
             setIsModalVisible(true);
           }}
         >
-          <Text style={styles.addButtonText}>Add Expense</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.addButton, styles.expenseButton]}
-          onPress={() => {
-            setTransactionType('Expense');
-            setSelectedRecord(null); // Ensure no record is selected for new entry
-            setIsModalVisible(true);
-          }}
-        >
-          <Text style={styles.addButtonText}>PassBook</Text>
+          <Text style={styles.buttonText}>Add Expense</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.addButton, styles.incomeButton]}
           onPress={() => {
             setTransactionType('Income');
-            setSelectedRecord(null); // Ensure no record is selected for new entry
+            setSelectedRecord(null);
             setIsModalVisible(true);
           }}
         >
-          <Text style={styles.addButtonText}>Add Income</Text>
+          <Text style={styles.buttonText}>Add Income</Text>
         </TouchableOpacity>
       </View>
+
+      <TouchableOpacity 
+        onPress={() => setShowAllDetails(!showAllDetails)} 
+        style={styles.showMoreButton}
+      >
+        <Text style={styles.showMoreText}>{showAllDetails ? 'Show Less' : 'Show More'}</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -273,15 +262,19 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     backgroundColor: '#fff',
     borderRadius: 10,
-    borderWidth: 1, // Add border width
-    borderColor: '#ddd', // Border color
+    borderWidth: 1, 
+    borderColor: '#ddd', 
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10,
-    
-    
+    marginBottom: 10, 
+  },
+
+  dashboardLink: {
+    fontSize: 16,
+    color: '#007bff',
+    marginTop: 10,
   },
   profitText: {
     color: 'green',
@@ -414,8 +407,9 @@ const styles = StyleSheet.create({
     borderColor: '#ddd', // Border color
   },
   showMoreButton: {
-    paddingVertical: 10,
+    paddingVertical: 40,
     alignItems: 'center',
+   
   },
   showMoreText: {
     color: '#007bff',

@@ -1,5 +1,5 @@
-import {  Alert, ScrollView, StyleSheet, ActivityIndicator, BackHandler } from "react-native";
-import React, {  useEffect, useState } from "react";
+import { Alert, ScrollView, StyleSheet, ActivityIndicator, BackHandler } from "react-native";
+import React, { useEffect, useState } from "react";
 import Layout from "../Market/Layout.js";
 import Categories from "../Market/Category.js";
 import Banner from "../Market/Banner.js";
@@ -7,6 +7,8 @@ import Products from "../Market/Product.js";
 import Header from "../Market/Header.js";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const themeColors = { bg: '#B6E6FC' };
 
 const Home = () => {
   const [productsData, setProductsData] = useState([]);
@@ -26,8 +28,13 @@ const Home = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setProductsData(response.data.products);
-      setFilteredProducts(response.data.products); 
+      // Log the full response to see its structure
+      console.log('API Response:', response.data);
+
+      // Ensure products is an array before setting state
+      const products = Array.isArray(response.data.products) ? response.data.products : [];
+      setProductsData(products);
+      setFilteredProducts(products); 
       setLoading(false);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -55,7 +62,7 @@ const Home = () => {
     console.log('Category selected:', category); 
     if (category) {
       const filtered = productsData.filter(product => 
-        product.category === category 
+        product.category.name === category 
       );
       console.log('Filtered products:', filtered);
       setFilteredProducts(filtered);
@@ -65,7 +72,6 @@ const Home = () => {
   };
 
   const handleBackPress = () => {
-  
     if (filteredProducts.length < productsData.length) {
       setFilteredProducts(productsData);
       return true; 
@@ -81,8 +87,9 @@ const Home = () => {
 
     return () => backHandler.remove();
   }, [filteredProducts, productsData]);
+  
   return (
-    <Layout>
+    <Layout style={{ backgroundColor: themeColors.bg }}>
       <Header onSearch={handleSearch} />
       <Categories onSelectCategory={handleCategorySelect} />
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
@@ -98,12 +105,3 @@ const Home = () => {
 };
 
 export default Home;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});

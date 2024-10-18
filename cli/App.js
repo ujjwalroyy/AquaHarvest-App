@@ -20,6 +20,8 @@ import Inventory from './screens/HOME/Inventory/inventory.js'
 import Notifications from './screens/Market/Notifications.js'
 import Categories from './screens/Market/Category.js'
 import ProductDetails from './screens/Market/ProductDetails.js'
+import Dashboard from './screens/User/Dashboard.js'
+import PondHealth from "./screens/HOME/Pond/PondHelth.js";
 
 const toastConfig = {
   success: (props) => (
@@ -79,6 +81,8 @@ const Continue = () => (
     <Stack.Screen name="Pond" component={Pond} />
     <Stack.Screen name="Inventory" component={Inventory} />
     <Stack.Screen name="Market" component={Market} />
+    <Stack.Screen name="Dashboard" component={Dashboard} />
+    <Stack.Screen name="PondHelth" component={PondHealth} />
     <Stack.Screen name="PondReport" component={PondReport} />
     <Stack.Screen name="PondInventory" component={PondInventory} />
     <Stack.Screen name="PondTest" component={PondTest} />

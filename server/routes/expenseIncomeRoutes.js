@@ -1,5 +1,5 @@
 import express from 'express'
-import { calculateProfitOrLoss, createExpense, createIncome, deleteExpense, deleteIncome, getAllExpenses, getAllIncome, getExpenseByPond, getIncomeByPond, updateExpense, updateIncome } from '../controllers/expenseIncomeController.js';
+import { calculateFinancials, calculateProfitOrLoss, createExpense, createIncome, deleteExpense, deleteIncome, getAllExpenses, getAllIncome, getExpenseByPond, getIncomeByPond, updateExpense, updateIncome } from '../controllers/expenseIncomeController.js';
 import { isAuth } from '../middlewares/auth.js';
 
 const router = express.Router();
@@ -15,6 +15,7 @@ router.get('/expenses', isAuth, getAllExpenses);
 router.get('/expense/pond/:pondId', isAuth, getExpenseByPond);
 router.put('/expense/:pondId', isAuth, updateExpense);
 router.delete('/expense/:pondId', isAuth, deleteExpense);
+router.get('/calculate', isAuth, calculateFinancials);
 
 router.post('/calculateProfitOrLoss', isAuth, calculateProfitOrLoss);
 

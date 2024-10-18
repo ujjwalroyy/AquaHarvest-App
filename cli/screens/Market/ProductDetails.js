@@ -1,42 +1,70 @@
-import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import React, { useEffect, useState } from "react";
-import { ProductsData } from "./data/ProductData.js";
+import { View, Text, Image, StyleSheet, TouchableOpacity, Linking } from "react-native";
+import axios from 'axios';
 import Layout from "./Layout.js";
 
+const themeColors = { bg: '#B6E6FC' };
+
 const ProductDetails = ({ route }) => {
+  const { params } = route; 
   const [pDetails, setPDetails] = useState({});
-  const [qty, setQty] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   useEffect(() => {
-    const getProudct = ProductsData.find((p) => {
-      return p?._id === params?._id;
-    });
-    setPDetails(getProudct);
-  }, [params?._id]);
-  const { params } = route;
+    const fetchProductDetails = async () => {
+      try {
+        console.log(`Fetching product details for ID: ${params._id}`);
+        const response = await axios.get(`http://192.168.43.60:5050/api/v1/product/${params._id}`);
+        console.log('API response:', response.data);
+        setPDetails(response.data.product);
+      } catch (err) {
+        console.error('Error fetching product:', err);
+        setError('Failed to load product details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProductDetails();
+  }, [params._id]); 
+
+  if (loading) {
+    return <Text>Loading...</Text>;
+  }
+
+  if (error) {
+    return <Text>{error}</Text>;
+  }
+
+  const handleContactUs = () => {
+    const phoneNumber = pDetails.phone; 
+    Linking.openURL(`tel:${phoneNumber}`)
+      .catch(() => alert('Error: Unable to open phone app.'));
+  };
+
   return (
-    <Layout>
-      <Image source={{ uri: pDetails?.imageUrl }} style={styles.image} />
+    <Layout style={{ backgroundColor: themeColors.bg}}>
+      <Image source={{ uri: pDetails?.images[0]?.url }} style={styles.image} />
       <View style={styles.container}>
         <Text style={styles.title}>{pDetails?.name}</Text>
-        <Text style={styles.desc}>Price : {pDetails?.description} </Text>
-        <Text style={styles.title}>Price : {pDetails?.price} ₹</Text>
+        <Text style={styles.desc}>Description: {pDetails?.description}</Text>
+        <Text style={styles.title}>Price: ₹{pDetails?.price} </Text>
         
         <View style={styles.btnContainer}>
           <TouchableOpacity
             style={styles.btnCart}
-            onPress={() => alert(`comming soon`)}
+            onPress={handleContactUs}
             disabled={pDetails?.quantity <= 0}
           >
-            <Text style={styles.btnCartText}>
-              {"Contact Us"}
-            </Text>
+            <Text style={styles.btnCartText}>Contact Us</Text>
           </TouchableOpacity>
-        
         </View>
       </View>
     </Layout>
   );
 };
+
 const styles = StyleSheet.create({
   image: {
     height: 300,
@@ -45,6 +73,11 @@ const styles = StyleSheet.create({
   container: {
     marginVertical: 15,
     marginHorizontal: 10,
+    backgroundColor: themeColors.bg,
+    borderColor: "#A9A9A9", // Changed to light black (dark gray)
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 10,
   },
   title: {
     fontSize: 18,
@@ -61,12 +94,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginVertical: 20,
-    marginHorizontal: 10,
   },
   btnCart: {
     width: 180,
     backgroundColor: "#000000",
-    // marginVertical: 10,
     borderRadius: 5,
     height: 40,
     justifyContent: "center",
@@ -77,14 +108,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 16,
   },
-  btnQty: {
-    backgroundColor: "lightgray",
-    width: 40,
-    alignItems: "center",
-    marginHorizontal: 10,
-  },
-  btnQtyText: {
-    fontSize: 20,
-  },
 });
+
 export default ProductDetails;

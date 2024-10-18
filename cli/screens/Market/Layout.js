@@ -9,7 +9,7 @@ const Layout = ({ children }) => {
       <StatusBar />
       <View>{children}</View>
       <View style={styles.footer}>
-        <Footer />
+        {/* <Footer /> */}
       </View>
     </>
   );
@@ -27,6 +27,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     padding: 10,
+    backgroundColor: '#B6E6FC'
   },
 });
 export default Layout;

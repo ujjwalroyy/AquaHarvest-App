@@ -25,6 +25,9 @@ export default function Pond({ navigation }) {
   const [lastTestDate, setLastTestDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+  const [timers, setTimers] = useState({});
+    const [isRunning, setIsRunning] = useState(false);
+
 
   useEffect(() => {
     fetchPonds();
@@ -52,10 +55,110 @@ export default function Pond({ navigation }) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setPonds(response.data);
+      checkTimers();
     } catch (error) {
       console.error('Error fetching ponds:', error);
       Alert.alert('Error', 'Failed to fetch pond data.');
     }
+  };
+
+  const checkTimers = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        Alert.alert('Error', 'No token found. Please log in again.');
+        return;
+      }
+
+      const response = await axios.get(
+        "http://192.168.43.60:5050/api/v1/pond/checkTimers",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // Assuming the response data is an object where pond IDs map to timer values
+      setTimers(response.data);
+    } catch (error) {
+      console.error('Error checking timers:', error);
+      Alert.alert('Error', 'Failed to check timers.');
+    }
+  };
+
+  
+  
+
+  useEffect(() => {
+    ponds.forEach((pond) => {
+      if (pond.lastTestDate) {
+        const lastTestTime = new Date(pond.lastTestDate).getTime();
+        const currentTime = Date.now();
+        const elapsedTime = currentTime - lastTestTime;
+
+        // Calculate remaining time
+        const remainingTime = 864000000 - elapsedTime; // 10 days in milliseconds
+        if (remainingTime > 0) {
+          setTimers((prevTimers) => ({
+            ...prevTimers,
+            [pond._id]: remainingTime,
+          }));
+          setIsRunning(true);
+        }
+      }
+    });
+  }, [ponds]);
+
+  useEffect(() => {
+    let interval = null;
+
+    if (isRunning) {
+      interval = setInterval(() => {
+        setTimers((prevTimers) => {
+          const updatedTimers = { ...prevTimers };
+          Object.keys(updatedTimers).forEach((pondId) => {
+            updatedTimers[pondId] = updatedTimers[pondId] - 1000; // Decrease timer every second
+          });
+          return updatedTimers;
+        });
+      }, 1000);
+    } else if (Object.values(timers).every((t) => t <= 0)) {
+      clearInterval(interval);
+      setIsRunning(false);
+    }
+
+    return () => clearInterval(interval); // Cleanup on component unmount
+  }, [isRunning, timers]);
+
+  const handleNewTest = async (pondId) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        Alert.alert('Error', 'No token found. Please log in again.');
+        return;
+      }
+  
+      await axios.put(
+        `http://192.168.43.60:5050/api/v1/pond/updateTestDate/${pondId}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+  
+      // Reset timer for the pond after updating the test date
+      setTimers((prevTimers) => ({
+        ...prevTimers,
+        [pondId]: 864000000, // Resetting to 10 days
+      }));
+    } catch (error) {
+      console.error('Error updating test date:', error);
+      Alert.alert('Error', 'Failed to reset the pond test date.');
+    }
+  };
+
+  const formatTime = (time) => {
+    const days = Math.floor(time / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((time % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((time % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((time % (1000 * 60)) / 1000);
+
+    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
   };
 
   const handleAddOrUpdatePond = async () => {
@@ -72,8 +175,10 @@ export default function Pond({ navigation }) {
       speciesCulture: species === 'Other' ? newSpecies : species,
       stockingDensity,
       feedType,
-      lastTestDate: lastTestDate.toLocaleDateString(),
+      lastTestDate: lastTestDate.toISOString(),
     };
+
+    console.log('Submitting pond data:', newPond);
 
     try {
       const token = await AsyncStorage.getItem("token");
@@ -208,6 +313,19 @@ export default function Pond({ navigation }) {
     if (selectedDate) setLastTestDate(selectedDate);
   };
 
+  const TimerWithIcon = ({ pondId }) => {
+    return (
+      <View style={styles.timerContainer}>
+        <FontAwesome name="clock-o" size={20} color="#FF5722" style={styles.timerIcon} />
+        <Text style={styles.timerText}>{formatTime(timers[pondId] || 0)}</Text>
+        <TouchableOpacity style={styles.resetButton} onPress={() => handleNewTest(pondId)}>
+          <Ionicons name="refresh" size={16} color="#FFFFFF" />
+        </TouchableOpacity>
+      </View>
+    );
+  };
+  
+
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
@@ -243,7 +361,15 @@ export default function Pond({ navigation }) {
             <Text>Species: {pond.speciesCulture}</Text>
             <Text>Stocking Density: {pond.stockingDensity} fish/m²</Text>
             <Text>Feed Type: {pond.feedType}</Text>
-            <Text>Date: {pond.lastTestDate}</Text>
+            <Text>Last Test Date: {new Date(pond.lastTestDate).toLocaleDateString()}</Text>
+            {timers[pond._id] !== undefined && timers[pond._id] > 0 ? (
+              <Text>Time Remaining: {formatTime(timers[pond._id])}</Text>
+            ) : (
+              <Text style={{ color: 'red' }}>Test Required!</Text>
+            )}
+            <TouchableOpacity onPress={() => handleNewTest(pond._id)}>
+              <Text>Set New Test</Text>
+            </TouchableOpacity>
 
             <View style={styles.buttonGroup}>
               <TouchableOpacity style={styles.cardButton} onPress={() => navigation.navigate('PondReport', { pondId: pond._id})}>
@@ -467,7 +593,7 @@ const styles = StyleSheet.create({
   },
   addButton: {
     position: 'absolute',
-    bottom: 30,
+    bottom: 70,
     right: 30,
     backgroundColor: '#1E88E5',
     width: 60,
@@ -518,5 +644,43 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     paddingVertical: 10,
     marginBottom: 10,
+  },
+  pondBoxTitleTimer: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1E88E5',
+  },
+  timerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  timerIcon: {
+    marginRight: 8,
+  },
+  timerText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FF5722',
+    backgroundColor: '#F0F0F0',
+    borderRadius: 5,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    flex: 1,
+  },
+  resetButtonTimer: {
+    backgroundColor: '#FF5722', // Color for the reset button
+    borderRadius: 20, // Make it a circle
+    padding: 6, // Adjust padding for size
+    marginLeft: 10, // Space between timer text and button
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardButtonTimer: {
+    backgroundColor: '#1E88E5',
+    borderRadius: 5,
+    padding: 10,
+    alignItems: 'center',
+    marginTop: 10,
   },
 });

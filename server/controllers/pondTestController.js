@@ -27,6 +27,16 @@ export const createPondTest = async (req, res) => {
   }
 };
 
+export const getAllPondTest = async (req, res) => {
+  try {
+    const pondTests = await PondTest.find();
+    res.status(200).json(pondTests);
+  } catch (error) {
+    console.error('Error fetching pond tests:', error);
+    res.status(500).json({ message: 'Failed to fetch pond reports', error });
+  }
+};
+
 export const getPondTestByPondId = async (req, res) => {
   try {
     const { pondId } = req.params;

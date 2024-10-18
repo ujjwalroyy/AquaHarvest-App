@@ -6,6 +6,7 @@ import {
   passwordResetController, 
   registerController, 
   resetPassword, 
+  searchUsers, 
   updatePasswordController, 
   updateProfileController, 
   updateProfilePic, 
@@ -38,5 +39,7 @@ router.get('/reset-password', passwordResetController);
 router.post('/send-otp', resetPassword);
 
 router.post('/verify-forgot-otp', verifyForgetOtpController)
+
+router.get('/search', searchUsers)
 
 export default router;

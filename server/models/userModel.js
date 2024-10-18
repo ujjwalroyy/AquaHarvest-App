@@ -43,7 +43,7 @@ const userSchema = new mongoose.Schema(
         type: String,
       },
     },
-    dob: Date,
+    dob: String,
     answer: {
       type: String,
     },

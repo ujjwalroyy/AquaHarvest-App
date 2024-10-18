@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import incomeModel from '../models/incomeModel.js';
 import expenseModel from '../models/expenseModel.js';
+import pondModel from '../models/pondModel.js'
 
 export const createIncome = async (req, res) => {
     try {
@@ -184,5 +185,44 @@ export const calculateProfitOrLoss = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ message: 'Error calculating profit or loss', error: error.message });
+    }
+};
+
+
+
+export const calculateFinancials = async (req, res) => {
+    try {
+        const userId = req.user.id; // Assuming user ID is set in request
+
+        // Fetch all ponds for the user
+        const ponds = await pondModel.find({ userId });
+
+        if (!ponds || ponds.length === 0) {
+            return res.status(200).json({ totalIncome: 0, totalExpenses: 0, profitOrLoss: 0 });
+        }
+
+        // Fetch incomes and expenses for all ponds
+        const incomeRecords = await incomeModel.find({ pondId: { $in: ponds.map(pond => pond._id) } });
+        const expenseRecords = await expenseModel.find({ pondId: { $in: ponds.map(pond => pond._id) } });
+
+        // Calculate total income
+        const totalIncome = incomeRecords.reduce((sum, record) => sum + (record.cost || 0), 0);
+
+        // Calculate total expenses
+        const totalExpenses = expenseRecords.reduce((sum, record) => sum + (record.cost || 0), 0);
+
+        // Calculate profit or loss
+        const profitOrLoss = totalIncome - totalExpenses;
+
+        // Log the calculated values
+        console.log('Total Income:', totalIncome);
+        console.log('Total Expenses:', totalExpenses);
+        console.log('Profit or Loss:', profitOrLoss);
+
+        // Send response
+        res.status(200).json({ totalIncome, totalExpenses, profitOrLoss });
+    } catch (error) {
+        console.error('Error calculating financials:', error);
+        res.status(500).json({ message: 'Failed to calculate financials', error: error.message });
     }
 };

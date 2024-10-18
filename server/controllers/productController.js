@@ -3,6 +3,8 @@ import productModel from "../models/productModel.js";
 import { getDataUri } from "../utils/features.js";
 import cloudinary from "cloudinary";
 import categoryModel from "../models/categoryModel.js";
+import { Readable } from 'stream';  // Add this import
+
 //Get All Product
 export const getAllProductController = async (req, res) => {
   const { keyword, category } = req.query;
@@ -48,42 +50,135 @@ export const getAllProductController = async (req, res) => {
 //get single product
 export const getSingleProductController = async (req, res) => {
   try {
+    console.log("Fetching product with ID:", req.params.id); // Log the product ID
     const product = await productModel.findById(req.params.id);
     if (!product) {
       return res.status(404).send({
         success: false,
-        message: "product not found",
+        message: "Product not found",
       });
     }
     res.status(200).send({
       success: true,
-      message: "product found",
+      message: "Product found",
       product,
     });
   } catch (error) {
-    console.log(error);
-
+    console.error(error); // Log error for debugging
     if (error.name == "CastError") {
-      return res.status(500).send({
+      return res.status(400).send({ // 400 Bad Request for invalid IDs
         success: false,
-        message: "Invalid Id",
+        message: "Invalid ID",
       });
     }
     res.status(500).send({
       success: false,
-      message: "Error in geting single product API",
+      message: "Error in getting single product API",
       error,
     });
   }
 };
 
 //create product
+// export const createProductController = async (req, res) => {
+//   try {
+//     const { name, description, price, category: categoryName, images } = req.body;
+
+//     // Validate required fields
+//     if (!name || !description || !price || !categoryName || !images) {
+//       return res.status(400).send({
+//         success: false,
+//         message: "Please provide all fields",
+//       });
+//     }
+
+//     // Fetch the category ObjectId from the database
+//     let category = await categoryModel.findOne({ name: categoryName });
+
+//     // If category does not exist, create a new one
+//     if (!category) {
+//       category = await categoryModel.create({ name: categoryName });
+//     }
+
+//     const imageData = [];
+
+//     // Handle uploaded file (if exists)
+//     if (req.file) {
+//       const fileDataUri = getDataUri(req.file); // Convert the file to Data URI
+//       try {
+//         const cdb = await cloudinary.v2.uploader.upload(fileDataUri.content); // Upload to Cloudinary
+//         imageData.push({
+//           public_id: cdb.public_id,
+//           url: cdb.secure_url,
+//         });
+//       } catch (cloudinaryError) {
+//         console.error('Cloudinary upload error:', cloudinaryError);
+//         return res.status(500).send({
+//           success: false,
+//           message: 'Error uploading image to Cloudinary',
+//           error: cloudinaryError.message,
+//         });
+//       }
+//     }
+
+//     // Handle images URLs (if provided)
+//     if (images) {
+//       const imageUrls = Array.isArray(images) ? images : [images];
+//       for (const image of imageUrls) {
+//         try {
+//           const cdb = await cloudinary.v2.uploader.upload(image); // Upload each image URL to Cloudinary
+//           imageData.push({
+//             public_id: cdb.public_id,
+//             url: cdb.secure_url,
+//           });
+//         } catch (cloudinaryError) {
+//           console.error('Cloudinary upload error for image URL:', cloudinaryError);
+//           return res.status(500).send({
+//             success: false,
+//             message: 'Error uploading image URL to Cloudinary',
+//             error: cloudinaryError.message,
+//           });
+//         }
+//       }
+//     }
+
+//     // Create product in the database
+//     const newProduct = await productModel.create({
+//       name,
+//       description,
+//       price,
+//       category: category._id,
+//       images: imageData, // Ensure images are included here
+//     });
+
+//     res.status(201).send({
+//       success: true,
+//       message: "Product created successfully",
+//       product: {
+//         ...newProduct.toObject(), // Convert to plain object
+//         images: imageData, // Include the images in the response
+//       },
+//     });
+//   } catch (error) {
+//     console.error('Error in createProductController:', error); // Log error for debugging
+//     res.status(500).send({
+//       success: false,
+//       message: "Error in creating product",
+//       error: error.message || error,
+//     });
+//   }
+// };
+
+
 export const createProductController = async (req, res) => {
+  console.log("Received fields:", req.body);
+  console.log("Received file:", req.file);
+
   try {
-    const { name, description, price, category: categoryName, images } = req.body;
+    const { name, description, price, category: categoryName, images, phone } = req.body;
 
     // Validate required fields
-    if (!name || !description || !price || !categoryName) {
+    if (!name || !description || !price || !categoryName || !phone) {
       return res.status(400).send({
         success: false,
         message: "Please provide all fields",
@@ -91,52 +186,97 @@ export const createProductController = async (req, res) => {
     }
 
     // Fetch the category ObjectId from the database
-    let category = await categoryModel.findOne({ name: categoryName }); // Ensure you're using the correct field
+    let category = await categoryModel.findOne({ name: categoryName });
 
     // If category does not exist, create a new one
     if (!category) {
-      category = await categoryModel.create({ name: categoryName }); // Ensure you're providing the name field
+      category = await categoryModel.create({ name: categoryName });
     }
 
     const imageData = [];
 
     // Handle uploaded file (if exists)
     if (req.file) {
-      const file = getDataUri(req.file);
-      const cdb = await cloudinary.v2.uploader.upload(file);
-      imageData.push({
-        public_id: cdb.public_id,
-        url: cdb.secure_url,
-      });
+      try {
+        // Create a readable stream from the buffer
+        const stream = Readable.from(req.file.buffer);
+
+        // Create a new promise to handle the upload
+        const uploadPromise = new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.v2.uploader.upload_stream(
+            { resource_type: 'image' },
+            (error, result) => {
+              if (error) {
+                return reject(error);
+              }
+              // Push the result to imageData after upload is complete
+              imageData.push({
+                public_id: result.public_id,
+                url: result.secure_url,
+              });
+              resolve();
+            }
+          );
+
+          // Pipe the readable stream into the upload stream
+          stream.pipe(uploadStream);
+        });
+
+        // Wait for the upload to finish
+        await uploadPromise;
+      } catch (cloudinaryError) {
+        console.error('Cloudinary upload error:', cloudinaryError);
+        return res.status(500).send({
+          success: false,
+          message: 'Error uploading image to Cloudinary',
+          error: cloudinaryError.message,
+        });
+      }
+    } else {
+      console.error('No file uploaded');
     }
 
     // Handle images URLs (if provided)
     if (images) {
       const imageUrls = Array.isArray(images) ? images : [images];
-      imageUrls.forEach((image) => {
-        imageData.push({
-          public_id: image.split('/').pop().split('.')[0],
-          url: image,
-        });
-      });
+      for (const image of imageUrls) {
+        try {
+          const cdb = await cloudinary.v2.uploader.upload(image);
+          imageData.push({
+            public_id: cdb.public_id,
+            url: cdb.secure_url,
+          });
+        } catch (cloudinaryError) {
+          console.error('Cloudinary upload error for image URL:', cloudinaryError);
+          return res.status(500).send({
+            success: false,
+            message: 'Error uploading image URL to Cloudinary',
+            error: cloudinaryError.message,
+          });
+        }
+      }
     }
 
-    // Create product in the database
-    await productModel.create({
+    // Create product in the database after the upload is completed
+    const newProduct = await productModel.create({
       name,
       description,
       price,
-      category: category._id, // Use the fetched or newly created ObjectId
+      phone,
+      category: category._id,
       images: imageData,
     });
 
     res.status(201).send({
       success: true,
       message: "Product created successfully",
-      
+      product: {
+        ...newProduct.toObject(),
+        images: imageData,
+      },
     });
   } catch (error) {
-    console.log(error);
+    console.error('Error in createProductController:', error);
     res.status(500).send({
       success: false,
       message: "Error in creating product",
@@ -144,6 +284,8 @@ export const createProductController = async (req, res) => {
     });
   }
 };
+
+
 
 export const updateProductController = async (req, res) => {
   try {

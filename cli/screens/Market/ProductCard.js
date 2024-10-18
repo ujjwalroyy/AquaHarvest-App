@@ -1,55 +1,57 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import React from "react";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import AntDesign from "react-native-vector-icons/AntDesign";
+import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+
+const themeColors = { bg: '#B6E6FC' };
 
 const ProductsCard = ({ p }) => {
   const navigation = useNavigation();
 
-  const handleMoreButton = (id) => {
-    navigation.navigate("ProductDetails", { _id: id });
-    console.log(id);
+  const handleMoreButton = () => {
+    if (p?._id) {
+      navigation.navigate("ProductDetails", { _id: p._id });
+      console.log("Navigating to Product Details with ID:", p._id);
+    }
   };
 
-  const handleAddToCart = () => {
-    alert("comming soon...");
+  const handleBuy = () => {
+    alert("Coming soon...");
   };
+
   return (
     <View style={styles.card}>
-        <Image style={styles.cardImage} source={{ uri: p?.imageUrl }} />
-        <Text style={styles.cardTitle}>{p?.name}</Text>
-        <Text style={styles.cardDesc}>
-          {p?.description.substring(0, 30)} ...more
-        </Text>
-        <View style={styles.BtnContainer}>
-          <TouchableOpacity
-            style={styles.btn}
-            onPress={() => handleMoreButton(p._id)}
-          >
-            <Text style={styles.btnText}>Details</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.btnCart} onPress={handleAddToCart}>
-            <Text style={styles.btnText}>
-            <AntDesign
-          style={[styles.icon, styles.active]}
-          name="contacts"
-        />  Contact
-            </Text>
-          </TouchableOpacity>
-        </View>
+      <Image style={styles.cardImage} source={{ uri: p?.images[0]?.url }} />
+      <Text style={styles.cardTitle}>{p?.name}</Text>
+      <Text style={styles.cardDesc}>
+        {p?.description.substring(0, 30)}... more
+      </Text>
+      <View style={styles.btnContainer}>
+        <TouchableOpacity
+          style={styles.btn}
+          onPress={handleMoreButton}
+        >
+          <Text style={styles.btnText}>Details</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.btnCart}
+          onPress={handleBuy}
+        >
+          <Text style={styles.btnText}>Buy</Text>
+        </TouchableOpacity>
       </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
-    borderColor: "lightgray",
+    borderColor: "#A9A9A9",
     marginVertical: 8,
     marginHorizontal: 4,
     width: "48%",
     padding: 5,
-    backgroundColor: "#ffffff",
+    backgroundColor: themeColors.bg,
     justifyContent: "center",
   },
   cardImage: {
@@ -58,15 +60,15 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   cardTitle: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: "bold",
     marginBottom: 5,
   },
   cardDesc: {
-    fontSize: 10,
+    fontSize: 12,
     textAlign: "left",
   },
-  BtnContainer: {
+  btnContainer: {
     marginTop: 5,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -74,22 +76,22 @@ const styles = StyleSheet.create({
   },
   btn: {
     backgroundColor: "#000000",
-    height: 20,
-    width: 75,
+    height: 30,
+    width: "48%",
     borderRadius: 5,
     justifyContent: "center",
   },
   btnCart: {
     backgroundColor: "orange",
-    height: 20,
-    width: 75,
+    height: 30,
+    width: "48%",
     borderRadius: 5,
     justifyContent: "center",
   },
   btnText: {
     color: "#ffffff",
     textAlign: "center",
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: "bold",
   },
 });

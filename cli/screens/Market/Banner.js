@@ -44,7 +44,7 @@ const Banner = () => {
 };
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#fff",
+    backgroundColor: "#B6E6FC",
     alignItems: "center",
     justifyContent: "center",
   },

@@ -13,7 +13,7 @@ const Header = ({ onSearch }) => {
   };
 
   return (
-    <View style={{ height: 90, backgroundColor: "lightgray" }}>
+    <View style={{ height: 90, backgroundColor: "#B6E6FC" }}>
       <View style={styles.container}>
         <TextInput
           style={styles.inputBox}
@@ -36,6 +36,8 @@ const Header = ({ onSearch }) => {
       flexDirection: "row",
       alignItems: "center",
       paddingHorizontal: 15,
+      marginTop: 40,
+      backgroundColor: '#B6E6FC'
     },
     inputBox: {
       borderWidth: 0.3,
@@ -54,7 +56,7 @@ const Header = ({ onSearch }) => {
       left: "95%",
     },
     icon: {
-      color: "#000000",
+      color: "#B6E6FC",
       fontSize: 18,
     },
   });

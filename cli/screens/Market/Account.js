@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
   },
   btnContainer: {
     padding: 10,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#B6E6FC",
     margin: 10,
     marginVertical: 20,
     elevation: 5,

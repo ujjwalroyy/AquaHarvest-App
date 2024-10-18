@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from "react-native";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import axios from "axios";
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Categories = ({ onSelectCategory }) => {
@@ -43,7 +44,6 @@ const Categories = ({ onSelectCategory }) => {
                 onSelectCategory(item.name);
               }}
             >
-              <AntDesign name={item.icon} style={styles.catIcon} />
               <Text style={styles.catTitle}>{item.name}</Text>
             </TouchableOpacity>
           </View>
@@ -59,7 +59,7 @@ export default Categories
 
   const styles = StyleSheet.create({
     container: {
-      backgroundColor: "#ffffff",
+      backgroundColor: "#B6E6FC",
       padding: 5,
       flexDirection: "row",
     },
@@ -67,12 +67,14 @@ export default Categories
       padding: 15,
       justifyContent: "center",
       alignItems: "center",
+      marginHorizontal: 10,
     },
     catIcon: {
       fontSize: 30,
       verticalAlign: "top",
     },
     catTitle: {
-      fontSize: 12,
+      fontSize: 20,
+      textTransform: "uppercase", 
     },
   });

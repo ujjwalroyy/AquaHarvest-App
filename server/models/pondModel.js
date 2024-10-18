@@ -38,8 +38,7 @@ const pondSchema = new mongoose.Schema(
             required: [true, "Stocking density is required"]
         },
         lastTestDate: {
-            type: Date,
-            required: false
+            type: { type: Date }
         }
     }, { timestamps: true }
 );

@@ -18,27 +18,19 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import Toast from "react-native-toast-message";
-import CloseIcon from 'react-native-vector-icons/FontAwesome';
+import CloseIcon from "react-native-vector-icons/FontAwesome";
 
 export default function HomeScreen(props) {
-  const [name, setName] = useState('')
-  const [profilePic, setProfilePic] = useState(null)
+  const [name, setName] = useState("");
+  const [profilePic, setProfilePic] = useState(null);
   const [isSidebarVisible, setSidebarVisible] = useState(false);
-  const [isDropdownVisible, setDropdownVisible] = useState(false);
   const [userData, setUserData] = useState(null);
   const slideAnim = useRef(
     new Animated.Value(-Dimensions.get("window").width)
   ).current;
   const borderColorAnim = useRef(new Animated.Value(0)).current;
 
-  // console.log('props ',props);
-  // useEffect(async () =>{
-  //   const token = await AsyncStorage.getItem('token')
-  //   console.log('Token... ',token);
-
-  // })
-
-  
+ 
   const navigation = useNavigation();
 
   async function getData() {
@@ -63,15 +55,15 @@ export default function HomeScreen(props) {
         }
       } else {
         console.warn("Token not found");
-        navigation.navigate('LoginNav', {screen: 'Login'}); 
+        navigation.navigate("LoginNav", { screen: "Login" });
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
 
       if (error.response && error.response.status === 401) {
         console.warn("Unauthorized, redirecting to login");
-        await AsyncStorage.removeItem('token'); 
-        navigation.navigate('LoginNav', {screen: 'Login'}); 
+        await AsyncStorage.removeItem("token");
+        navigation.navigate("LoginNav", { screen: "Login" });
       }
     }
   }
@@ -81,32 +73,31 @@ export default function HomeScreen(props) {
     getData();
   }, []);
 
-
-  
   useEffect(() => {
     if (userData) {
-      setName(userData.name || '');
-      setProfilePic(userData.profilePic || '');
+      setName(userData.name || "");
+      setProfilePic(userData.profilePic || "");
     }
   }, [userData]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      const displayName = (userData?.name || userData?.email || 'User').split(' ')[0];
-      if(userData){
-      Toast.show({
-        type: "success",
-        text1: `Welcome ${displayName}`,
-        text2: "Hii Buddy",
-        visibilityTime: 5000,
-      });
-    }
+      const displayName = (userData?.name || userData?.email || "User").split(
+        " "
+      )[0];
+      if (userData) {
+        Toast.show({
+          type: "success",
+          text1: `Welcome ${displayName}`,
+          text2: "Hii Buddy",
+          visibilityTime: 5000,
+        });
+      }
     }, 2000);
 
     return () => clearTimeout(timer);
   }, [userData]);
 
-  
   const handleBackPress = () => {
     Alert.alert("Exit App", "Are you sure you want to exit?", [
       {
@@ -130,55 +121,31 @@ export default function HomeScreen(props) {
     }, [])
   );
 
-
-  // function handleLogout() {
-  //   AsyncStorage.setItem('isLoggedIn', '')
-  //   AsyncStorage.setItem('token', '')
-  //   navigation.navigate('LoginNav', { screen: 'Welcome' });
-
-  // try {
-
-  //   const token = await AsyncStorage.getItem('token')
-  //   console.log('Logout clicked', token);
-  //   if(token){
-  //     console.log('Logout clicked with token:', token);
-  //     await AsyncStorage.removeItem('token')
-  //     console.log('Token removed from AsyncStorage');
-
-  //     await axios.post('http://192.168.43.60:5050/api/v1/user/logout', {token});
-  //     console.log('Logout request sent');
-  //     navigation.navigate('Login');
-  //   }
-
-  // } catch (error) {
-  //   console.log('Error logging out:', error);
-  //   Alert.alert('Logout Failed', 'There was a problem logging out. Please try again.');
-  // }
-  // };
+ 
 
   const handleLogout = async (navigation) => {
     try {
-      const token = await AsyncStorage.getItem('token');
-      
+      const token = await AsyncStorage.getItem("token");
+
       if (!token) {
         console.error("No token found");
         return;
       }
-  
+
       const response = await axios.post(
         "http://192.168.43.60:5050/api/v1/user/logout",
         {},
         {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
-  
+
       if (response.data.success) {
         await AsyncStorage.setItem("isLoggedIn", "false");
         await AsyncStorage.setItem("token", "");
-        
+
         navigation.reset({
           index: 0,
           routes: [{ name: "LoginNav" }],
@@ -190,7 +157,6 @@ export default function HomeScreen(props) {
       console.error("Error logging out:", error);
     }
   };
-  
 
   useEffect(() => {
     Animated.loop(
@@ -211,163 +177,159 @@ export default function HomeScreen(props) {
 
   const borderColorInterpolation = borderColorAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ["#FF0000", "#0000FF"], // Transition from red to blue
+    outputRange: ["#FF0000", "#0000FF"], 
   });
 
   const toggleSidebar = () => {
     if (isSidebarVisible) {
       Animated.timing(slideAnim, {
-        toValue: -Dimensions.get("window").width, // Slide off-screen
+        toValue: -Dimensions.get("window").width, 
         duration: 300,
         useNativeDriver: false,
       }).start(() => setSidebarVisible(false));
     } else {
       setSidebarVisible(true);
       Animated.timing(slideAnim, {
-        toValue: 0, // Slide on-screen
+        toValue: 0, 
         duration: 300,
         useNativeDriver: false,
       }).start();
     }
   };
 
-  const toggleDropdown = () => {
-    setDropdownVisible(!isDropdownVisible);
-  };
-
   const handleProfile = () => {
-    navigation.navigate("Profile")
-  }
+    navigation.navigate("Profile");
+  };
 
   return (
     <View style={{ flex: 1 }}>
       <LinearGradient colors={["#B3E5FC", "#E3F2FD"]} style={styles.container}>
         <StatusBar style="auto" />
 
-        {/* Header Section */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.menuIcon} onPress={toggleSidebar}>
-            {/* Menu icon */}
             <View style={styles.menuLine}></View>
             <View style={styles.menuLine}></View>
             <View style={styles.menuLine}></View>
           </TouchableOpacity>
           <View style={styles.userInfo}>
             <TouchableOpacity onPress={handleProfile} style={styles.userInfo}>
-            <Text style={styles.userName} >{name.split(' ')[0]}</Text>
-            
-            <Image
-              source={profilePic}
-              style={styles.userImage}
-            />
+              <Text style={styles.userName}>{name.split(" ")[0]}</Text>
+
+              <Image
+                source={profilePic ? { uri: profilePic.url } : null}
+                style={styles.userImage}
+              />
             </TouchableOpacity>
-            
           </View>
         </View>
 
-        {/* Fish Image Carousel */}
         <Image
-          source={require("../assets/images/cover.jpg")} // Replace with your fish image URL or require local asset
+          source={require("../assets/images/cover.jpg")} 
           style={styles.fishImage}
         />
+        
 
-        {/* Navigation Dots */}
         <View style={styles.dotsContainer}>
           <View style={styles.dot}></View>
           <View style={styles.dot}></View>
           <View style={styles.dot}></View>
         </View>
 
-
         <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-          {/* Farm Inventory Button with Dropdown */}
-          {/* <TouchableOpacity style={styles.navButton} onPress={toggleDropdown}>
-            <Text style={styles.navButtonText}>FARM INVENTORY</Text>
-          </TouchableOpacity> */}
-          {/* {isDropdownVisible && (
-            <View style={styles.dropdownContainer}>
-              <TouchableOpacity
-                style={styles.dropdownOption}
-                onPress={() => navigation.navigate("FarmInventory")}
-              >
-                <Text style={styles.dropdownOptionText}>Farm Inventory</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.dropdownOption}
-                onPress={() => navigation.navigate("Pond")}
-              >
-                <Text style={styles.dropdownOptionText}>Pond</Text>
-              </TouchableOpacity>
-            </View>
-          )} */}
-
-          {/* Other Navigation Buttons */}
-          <TouchableOpacity style={styles.navButton}
-          onPress={() => navigation.navigate("Pond")}>
+          <TouchableOpacity
+            style={styles.navButton}
+            onPress={() => navigation.navigate("Pond")}
+          >
             <Text style={styles.navButtonText}>POND MANAGEMENT</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navButton}
-          onPress={() => navigation.navigate("Market")}>
+          <TouchableOpacity
+            style={styles.navButton}
+            onPress={() => navigation.navigate("Market")}
+          >
             <Text style={styles.navButtonText}>MARKET</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navButton}
-          onPress={() => navigation.navigate("Inventory")}>
+          <TouchableOpacity
+            style={styles.navButton}
+            onPress={() => navigation.navigate("PondHelth")}
+          >
+            <Text style={styles.navButtonText}>Dashboard</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.navButton}
+            onPress={() => navigation.navigate("Inventory")}
+          >
             <Text style={styles.navButtonText}>INVENTORY</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navButton}>
+          <TouchableOpacity style={styles.navButton} 
+          onPress={() =>
+            Alert.alert("Coming Soon", "This feature is under development.")
+          } >
             <Text style={styles.navButtonText}>GALLERY</Text>
           </TouchableOpacity>
         </ScrollView>
       </LinearGradient>
       {isSidebarVisible && (
         <>
-        <TouchableWithoutFeedback onPress={toggleSidebar}>
-        <View style={styles.overlay} />
-      </TouchableWithoutFeedback>
-      <Animated.View
-          style={[styles.sidebar, { transform: [{ translateX: slideAnim }] }]}
-        >
-          <TouchableOpacity style={styles.closeButton} onPress={toggleSidebar}>
-            <Text><CloseIcon name="close" size={24} color="#000" /></Text>
-  
-</TouchableOpacity>
+          <TouchableWithoutFeedback onPress={toggleSidebar}>
+            <View style={styles.overlay} />
+          </TouchableWithoutFeedback>
           <Animated.View
-            style={[
-              styles.sidebarUserImageContainer,
-              { borderColor: borderColorInterpolation },
-            ]}
+            style={[styles.sidebar, { transform: [{ translateX: slideAnim }] }]}
           >
-            <Image
-              source={profilePic} // Local user image in the sidebar
-              style={styles.sidebarUserImage}
-            />
-          </Animated.View>
-          <Text style={styles.sidebarUserName}>{name}</Text>
-
-          <TouchableOpacity
-            style={styles.sidebarButton}
-            onPress={() => navigation.navigate("Profile")}
-          >
-            <Text style={styles.sidebarButtonText}>Profile</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sidebarButton}>
-            <Text style={styles.sidebarButtonText}>Premium</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sidebarButton}>
-            <Text style={styles.sidebarButtonText}>Dashboard</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sidebarButton}>
-            <Text style={styles.sidebarButtonText}>About Us</Text>
-          </TouchableOpacity>
-          <View style={styles.sidebarFooter}>
-            <TouchableOpacity style={styles.aboutUsButton} onPress={() => handleLogout(navigation)}>
-              <Text style={styles.sidebarButtonText}>Logout</Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={toggleSidebar}
+            >
+              <Text>
+                <CloseIcon name="close" size={24} color="#000" />
+              </Text>
             </TouchableOpacity>
-          </View>
-        </Animated.View>
+            <Animated.View
+              style={[
+                styles.sidebarUserImageContainer,
+                { borderColor: borderColorInterpolation },
+              ]}
+            >
+              <Image
+                source={profilePic ? { uri: profilePic.url } : null} 
+                style={styles.sidebarUserImage}
+              />
+            </Animated.View>
+            <Text style={styles.sidebarUserName}>{name}</Text>
+
+            <TouchableOpacity
+              style={styles.sidebarButton}
+              onPress={() => navigation.navigate("Profile")}
+            >
+              <Text style={styles.sidebarButtonText}>Profile</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.sidebarButton}
+              onPress={() =>
+                Alert.alert("Coming Soon", "This feature is under development.")
+              } 
+            >
+              <Text style={styles.sidebarButtonText}>Premium</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.sidebarButton}>
+              <Text style={styles.sidebarButtonText}
+              onPress={() => navigation.navigate("PondHelth")}
+              >Dashboard</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.sidebarButton}>
+              <Text style={styles.sidebarButtonText}>About Us</Text>
+            </TouchableOpacity>
+            <View style={styles.sidebarFooter}>
+              <TouchableOpacity
+                style={styles.aboutUsButton}
+                onPress={() => handleLogout(navigation)}
+              >
+                <Text style={styles.sidebarButtonText}>Logout</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
         </>
-        
-        
       )}
     </View>
   );
@@ -435,7 +397,7 @@ const styles = StyleSheet.create({
   navButton: {
     width: "100%",
     backgroundColor: "#E3F2FD",
-    paddingVertical: 40, // Increased from 20 to 40
+    paddingVertical: 40, 
     borderRadius: 15,
     marginBottom: 10,
     alignItems: "center",
@@ -451,7 +413,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   dropdownContainer: {
-    backgroundColor: '#E3F2FD',
+    backgroundColor: "#E3F2FD",
     borderRadius: 15,
     marginBottom: 10,
     paddingHorizontal: 10,
@@ -461,76 +423,76 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    borderBottomColor: "#ddd",
   },
   dropdownOptionText: {
-    color: '#1E88E5',
+    color: "#1E88E5",
     fontSize: 18,
   },
   sidebar: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
-    width: '80%',
-    height: '100%',
-    backgroundColor: '#ffffff',
+    width: "80%",
+    height: "100%",
+    backgroundColor: "#ffffff",
     padding: 20,
     zIndex: 100,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 2, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 5,
     elevation: 10,
   },
   closeButton: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
     padding: 5,
   },
   closeButtonText: {
     fontSize: 24,
-    color: '#000',
+    color: "#000",
   },
   sidebarUserImageContainer: {
     borderWidth: 3,
     borderRadius: 35,
     padding: 5,
     marginVertical: 10,
-    alignSelf: 'center',
+    alignSelf: "center",
   },
   sidebarUserImage: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#42A5F5',
+    backgroundColor: "#42A5F5",
   },
   sidebarUserName: {
-    fontSize: 20, 
-    textAlign: 'center',
+    fontSize: 20,
+    textAlign: "center",
     marginVertical: 10,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   sidebarButton: {
     marginVertical: 10,
     paddingVertical: 10,
     paddingHorizontal: 20,
-    backgroundColor: '#E3F2FD',
+    backgroundColor: "#E3F2FD",
     borderRadius: 10,
   },
   sidebarButtonText: {
     fontSize: 18,
-    color: '#1E88E5',
+    color: "#1E88E5",
   },
   sidebarFooter: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   aboutUsButton: {
     paddingVertical: 15,
-    backgroundColor: '#E3F2FD',
+    backgroundColor: "#E3F2FD",
     borderRadius: 10,
     marginTop: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   overlay: {
     position: "absolute",
@@ -539,6 +501,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
-    zIndex: 5, 
+    zIndex: 5,
   },
 });

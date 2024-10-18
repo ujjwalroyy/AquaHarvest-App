@@ -350,6 +350,7 @@ export const loginController = async (req, res) => {
 
 
 
+
 // export const registerController = async (req, res) => {
 //   try {
 //     const { name, email, password, address, city, country, phone, answer } = req.body;
@@ -590,6 +591,7 @@ export const getUserProfileController = async(req, res) => {
     }
 }
 
+
 //logout
 export const logoutController = async (req, res) =>{
   console.log('Logout request:', req.body);
@@ -619,6 +621,7 @@ export const updateProfileController = async(req, res) =>{
     try {
         const user = await userModel.findById(req.user._id)
         console.log("UserId: ", req.user._id);
+        console.log('Received data to update profile:', req.body);
         
         if (!user) {
           return res.status(404).send({
@@ -626,13 +629,36 @@ export const updateProfileController = async(req, res) =>{
               message: 'User not found'
           });
       }
-        const {name, email, state, city, country, phone} = req.body
+        const {name, email, state, city, country, phone, dob} = req.body
+
         if(name) user.name = name
         if(email) user.email = email
         if(state) user.state = state
         if(city) user.city = city
         if(country) user.country = country
         if(phone) user.phone = phone
+        if (dob) {
+          // Split the input assuming it's in DD/MM/YYYY format
+          const [day, month, year] = dob.split('/');
+          
+          // Create a new Date object
+          const parsedDob = new Date(`${year}-${month}-${day}`);
+          
+          // Check if the parsed date is valid
+          if (isNaN(parsedDob.getTime())) {
+            return res.status(400).send({
+              success: false,
+              message: 'Invalid date format for dob, expected DD/MM/YYYY',
+            });
+          }
+          
+          // Format the date to YYYY-MM-DD
+          const formattedDob = parsedDob.toISOString().split('T')[0]; // Get the date in YYYY-MM-DD format
+          
+          // Assign the formatted date to the user's dob field
+          user.dob = formattedDob; // Store as a string
+        }
+        
         //save
         console.log("Updating user:", user);
         await user.save()
@@ -695,40 +721,36 @@ export const updatePasswordController = async (req, res) =>{
 //Update user profile
 export const updateProfilePic = async(req, res) => {
     try {
+      console.log('Uploaded file:', req.file);
       const user = await userModel.findById(req.user._id)
-  //     if (!user) {
-  //       return res.status(404).send({
-  //           success: false,
-  //           message: 'User not found'
-  //       });
-  //   }
-  //   if (!req.file) {
-  //     return res.status(400).send({
-  //         success: false,
-  //         message: 'No file uploaded',
-  //     });
-  // }
+      if (!user) {
+        return res.status(404).send({
+            success: false,
+            message: 'User not found'
+        });
+    }
+    if (!req.file) {
+      return res.status(400).send({
+          success: false,
+          message: 'No file uploaded',
+      });
+  }
 
       const file = getDataUri(req.file)
-      await cloudinary.v2.destroy(user.profilePic.public_id)
-
-      // if (user.profilePic && user.profilePic.public_id) {
-      //   await cloudinary.v2.uploader.destroy(user.profilePic.public_id);
-      // }
-      // await cloudinary.v2.uploader.destroy(user.profilePic.public_id)
-      //update
-      const cdb = await cloudinary.v2.uploader.upload(file.content)
+      if (user.profilePic && user.profilePic.public_id) {
+        await cloudinary.v2.uploader.destroy(user.profilePic.public_id);
+      }
+      const cdb = await cloudinary.v2.uploader.upload(file.content);
       user.profilePic = {
         public_id: cdb.public_id,
-        url: cdb.secure_url
-      }
-      //save
-      await user.save()
+        url: cdb.secure_url,
+      };
+      await user.save();
       res.status(200).send({
         success: true,
-        message: "profile picture updated"
-      })
-
+        message: "Profile picture updated",
+        profilePic: user.profilePic,
+      });
     } catch (error) {
       console.log(error);
       res.status(500).send({
@@ -771,3 +793,17 @@ export const passwordResetController = async(req, res) => {
   }
 }
 
+export const searchUsers = async (req, res) => {
+  const { query } = req.query;
+  try {
+    const filteredUsers = await User.find({
+      $or: [
+        { name: { $regex: query, $options: 'i' } },   // Search by name (case-insensitive)
+        { id: query }                                // Search by ID
+      ]
+    });
+    res.status(200).json(filteredUsers);
+  } catch (error) {
+    res.status(500).json({ message: 'Error searching users' });
+  }
+};
