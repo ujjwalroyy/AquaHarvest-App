@@ -1,9 +1,14 @@
 import mongoose from 'mongoose';
 
 const incomeSchema = new mongoose.Schema({
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', 
+        required: true
+    },
     pondId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Ponds', 
+        ref: 'Ponds',  
         required: true
     },
     productName: {

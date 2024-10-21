@@ -1,7 +1,5 @@
 import { View, Text, StatusBar, StyleSheet } from "react-native";
 import React from "react";
-import Header from "./Header";
-import Footer from "./Footer";
 
 const Layout = ({ children }) => {
   return (
@@ -9,7 +7,6 @@ const Layout = ({ children }) => {
       <StatusBar />
       <View>{children}</View>
       <View style={styles.footer}>
-        {/* <Footer /> */}
       </View>
     </>
   );

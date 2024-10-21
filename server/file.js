@@ -3,17 +3,15 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const jwt = require('jsonwebtoken'); // For authentication
-const bcrypt = require('bcryptjs'); // For password hashing
+const jwt = require('jsonwebtoken')
+const bcrypt = require('bcryptjs'); 
 
 const app = express();
 const port = 5000;
 
-// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
-// MongoDB connection
 mongoose.connect('mongodb://localhost:27017/ponds', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -25,15 +23,13 @@ db.once('open', () => {
   console.log('Connected to MongoDB');
 });
 
-// User Schema
 const userSchema = new mongoose.Schema({
   username: String,
-  password: String, // hashed password
+  password: String,
 });
 
 const User = mongoose.model('User', userSchema);
 
-// Pond Schema
 const pondSchema = new mongoose.Schema({
   userId: mongoose.Schema.Types.ObjectId,
   name: String,
@@ -48,7 +44,6 @@ const pondSchema = new mongoose.Schema({
 
 const Pond = mongoose.model('Pond', pondSchema);
 
-// Middleware for authentication
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -61,7 +56,6 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// Routes
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
   const hashedPassword = await bcrypt.hash(password, 10);

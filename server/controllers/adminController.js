@@ -14,16 +14,15 @@ export const getAllUserProfile = async (req, res) => {
   export const getUserRegistrationStats = async (req, res) => {
     try {
       const users = await userModel.find();
-      const registrationStats = Array(12).fill(0); // Create an array for 12 months initialized to 0
+      const registrationStats = Array(12).fill(0); 
   
       users.forEach(user => {
-        const month = user.createdAt.getMonth(); // Get the month (0-11)
-        registrationStats[month]++; // Increment the count for the month
+        const month = user.createdAt.getMonth(); 
+        registrationStats[month]++; 
       });
   
-      // Format the response to include month names and counts
       const formattedStats = registrationStats.map((count, index) => ({
-        month: new Date(0, index).toLocaleString('default', { month: 'long' }), // Get month name
+        month: new Date(0, index).toLocaleString('default', { month: 'long' }), 
         count: count,
       }));
   
@@ -47,28 +46,23 @@ export const getAllUserProfile = async (req, res) => {
     }
   };
 
-// For date formatting, make sure to install moment.js
 
 export const getUserGraphs = async (req, res) => {
   const { userId } = req.params;
 
   try {
-    // Assuming you have a UserActivity model that tracks user activity
     const activities = await userModel.find({ userId });
 
-    // Initialize an object to hold the monthly activity counts
     const monthlyActivity = {};
 
-    // Loop through the activities and count them by month
     activities.forEach(activity => {
-      const month = moment(activity.date).format('MMMM'); // Get month name
+      const month = moment(activity.date).format('MMMM'); 
       if (!monthlyActivity[month]) {
-        monthlyActivity[month] = { currentData: 0, previousData: 0 }; // Initialize counts
+        monthlyActivity[month] = { currentData: 0, previousData: 0 };
       }
-      monthlyActivity[month].currentData += 1; // Increment current month's count
+      monthlyActivity[month].currentData += 1; 
     });
 
-    // Example: Let's assume you have data for the previous year for comparison
     const previousYearActivities = await userModel.find({
       userId,
       date: { $gte: moment().subtract(1, 'year').startOf('year'), $lt: moment().startOf('year') }
@@ -79,10 +73,9 @@ export const getUserGraphs = async (req, res) => {
       if (!monthlyActivity[month]) {
         monthlyActivity[month] = { currentData: 0, previousData: 0 };
       }
-      monthlyActivity[month].previousData += 1; // Increment previous year's count
+      monthlyActivity[month].previousData += 1; 
     });
 
-    // Prepare the graph data for response
     const graphData = [
       {
         title: "Monthly Activity",
@@ -92,7 +85,6 @@ export const getUserGraphs = async (req, res) => {
           previousData: monthlyActivity[month].previousData,
         })),
       },
-      // You can add more graphs here based on different metrics
     ];
 
     res.json(graphData);

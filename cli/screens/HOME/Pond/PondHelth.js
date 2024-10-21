@@ -7,9 +7,9 @@ import { ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function PondHealth() {
-  const [selectedPond, setSelectedPond] = useState(''); // Stores selected pond ID
-  const [pondData, setPondData] = useState([]); // All pond data
-  const [filteredPondData, setFilteredPondData] = useState([]); // Data for selected pond
+  const [selectedPond, setSelectedPond] = useState(''); 
+  const [pondData, setPondData] = useState([]); 
+  const [filteredPondData, setFilteredPondData] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [ponds, setPonds] = useState([]);
 
@@ -18,44 +18,67 @@ export default function PondHealth() {
   useEffect(() => {
     const fetchPondReports = async () => {
       try {
-        const response = await axios.get('http://192.168.43.60:5050/api/v1/pond-test/get-all'); // Replace with your backend URL
+        const token = await AsyncStorage.getItem("token"); 
+  
+        if (!token) {
+          console.error('No token found. Please log in again.');
+          return;
+        }
+  
+        const response = await axios.get(
+          'http://192.168.43.60:5050/api/v1/pond-test/get-all', 
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, 
+            },
+          }
+        );
+  
         setPondData(response.data);
         console.log("response", response.data);
+  
         if (response.data.length > 0) {
-          setSelectedPond(response.data[0].pondId); // Set to the first pond's ID
+          setSelectedPond(response.data[0].pondId); 
         }
+  
         setLoading(false);
       } catch (error) {
         console.error('Error fetching pond data:', error);
         setLoading(false);
       }
     };
+  
     fetchPondReports();
   }, []);
 
-  const fetchPonds = async () => {
-    try {
-      const token = await AsyncStorage.getItem("token");
-      if (!token) {
-        Alert.alert('Error', 'No token found. Please log in again.');
-        return;
-      }
-      const response = await axios.get(
-        "http://192.168.43.60:5050/api/v1/pond/getPonds",
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setPonds(response.data);
-      console.log("response ------------------>" ,response.data);
-      
-    } catch (error) {
-      console.error('Error fetching ponds:', error);
-      Alert.alert('Error', 'Failed to fetch pond data.');
-    }
-  };
-
   useEffect(() => {
+    const fetchPonds = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+        if (!token) {
+          Alert.alert('Error', 'No token found. Please log in again.');
+          return;
+        }
+
+        const response = await axios.get(
+          "http://192.168.43.60:5050/api/v1/pond/pondByUser",
+          {
+            headers: { Authorization: `Bearer ${token}` } 
+          }
+        );
+
+        setPonds(response.data); 
+        console.log("User-specific ponds fetched:--------------------------------------------------", response.data);
+        
+      } catch (error) {
+        console.error('Error fetching ponds:', error);
+        Alert.alert('Error', 'Failed to fetch pond data.');
+      }
+    };
+
     fetchPonds();
   }, []);
+
 
   useEffect(() => {
     if (selectedPond) {
@@ -103,7 +126,7 @@ export default function PondHealth() {
 
    const getPondNameById = (pondId) => {
     const pond = ponds.find(pond => pond._id === pondId);
-    return pond ? pond.name : pondId; // Return pond name if found, otherwise return the pond ID
+    return pond ? pond.name : pondId; 
   };
 
   const uniquePondIds = [...new Set(pondData.map(pond => pond.pondId))];
@@ -121,10 +144,9 @@ export default function PondHealth() {
           onValueChange={(itemValue) => setSelectedPond(itemValue)}
         >
           <Picker.Item label="Select a pond" value="" />
-          {uniquePondIds.map(pondId => {
-            const pondName = getPondNameById(pondId); // Compare pond ID and extract pond name
+          {ponds.map(pond => {
             return (
-              <Picker.Item key={pondId} label={pondName} value={pondId} />
+              <Picker.Item key={pond._id} label={pond.name} value={pond._id} />
             );
           })}
         </Picker>
@@ -139,11 +161,16 @@ export default function PondHealth() {
                 labels: timeData,
                 datasets: [{ data: phData }],
               }}
-              width={chartWidth} // Extended width for horizontal scroll
+              width={chartWidth}
               height={220}
               yAxisSuffix=" pH"
               chartConfig={chartConfig}
               style={styles.graph}
+              renderDotContent={({ x, y, index }) => (
+                <Text key={index} style={{ position: 'absolute', left: x, top: y - 20 }}>
+                  {phData[index]}
+                </Text>
+              )}
             />
 
             <Text style={styles.graphTitle}>Temperature</Text>
@@ -152,11 +179,16 @@ export default function PondHealth() {
                 labels: timeData,
                 datasets: [{ data: temperatureData }],
               }}
-              width={chartWidth} // Extended width for horizontal scroll
+              width={chartWidth}
               height={220}
               yAxisSuffix=" °C"
               chartConfig={chartConfig}
               style={styles.graph}
+              renderDotContent={({ x, y, index }) => (
+                <Text key={index} style={{ position: 'absolute', left: x, top: y - 20 }}>
+                  {temperatureData[index]}
+                </Text>
+              )}
             />
 
             <Text style={styles.graphTitle}>Dissolved Oxygen (DO)</Text>
@@ -165,11 +197,16 @@ export default function PondHealth() {
                 labels: timeData,
                 datasets: [{ data: DOData }],
               }}
-              width={chartWidth} // Extended width for horizontal scroll
+              width={chartWidth}
               height={220}
               yAxisSuffix=" mg/L"
               chartConfig={chartConfig}
               style={styles.graph}
+              renderDotContent={({ x, y, index }) => (
+                <Text key={index} style={{ position: 'absolute', left: x, top: y - 20 }}>
+                  {DOData[index]}
+                </Text>
+              )}
             />
 
             <Text style={styles.graphTitle}>Total Dissolved Solids (TDS)</Text>
@@ -178,11 +215,16 @@ export default function PondHealth() {
                 labels: timeData,
                 datasets: [{ data: TDSData }],
               }}
-              width={chartWidth} // Extended width for horizontal scroll
+              width={chartWidth}
               height={220}
               yAxisSuffix=" mg/L"
               chartConfig={chartConfig}
               style={styles.graph}
+              renderDotContent={({ x, y, index }) => (
+                <Text key={index} style={{ position: 'absolute', left: x, top: y - 20 }}>
+                  {TDSData[index]}
+                </Text>
+              )}
             />
 
             <Text style={styles.graphTitle}>Average Fish Length</Text>
@@ -191,11 +233,16 @@ export default function PondHealth() {
                 labels: timeData,
                 datasets: [{ data: avgLengthData }],
               }}
-              width={chartWidth} // Extended width for horizontal scroll
+              width={chartWidth}
               height={220}
               yAxisSuffix=" cm"
               chartConfig={chartConfig}
               style={styles.graph}
+              renderDotContent={({ x, y, index }) => (
+                <Text key={index} style={{ position: 'absolute', left: x, top: y - 20 }}>
+                  {avgLengthData[index]}
+                </Text>
+              )}
             />
 
             <Text style={styles.graphTitle}>Average Fish Weight</Text>
@@ -204,11 +251,16 @@ export default function PondHealth() {
                 labels: timeData,
                 datasets: [{ data: avgWeightData }],
               }}
-              width={chartWidth} // Extended width for horizontal scroll
+              width={chartWidth}
               height={220}
               yAxisSuffix=" kg"
               chartConfig={chartConfig}
               style={styles.graph}
+              renderDotContent={({ x, y, index }) => (
+                <Text key={index} style={{ position: 'absolute', left: x, top: y - 20 }}>
+                  {avgWeightData[index]}
+                </Text>
+              )}
             />
           </View>
         </ScrollView>
@@ -237,34 +289,33 @@ const chartConfig = {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f8ff',
-    padding: 20,
+    padding: 16,
+    backgroundColor: '#f5f5f5',
   },
   selectPondContainer: {
     marginBottom: 20,
   },
   selectPondText: {
-    fontSize: 18,
+   fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#333',
+    backgroundColor: '#37AFE1',
+    marginBottom: 16,
+    marginTop: 16,
+    textAlign: 'center',
+    paddingVertical: 12,
+    color: '#fff', 
   },
   picker: {
     height: 50,
     width: '100%',
-    backgroundColor: '#e6e6e6',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ccc',
   },
   scrollView: {
-    paddingBottom: 20,
+    alignItems: 'center',
   },
   graphTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginVertical: 10,
-    color: '#0059b3',
+    marginTop: 20,
   },
   graph: {
     marginVertical: 8,

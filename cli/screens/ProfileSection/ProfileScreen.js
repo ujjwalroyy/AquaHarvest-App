@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { MaterialCommunityIcons } from '@expo/vector-icons'; // If you want to use icons
+import { MaterialCommunityIcons } from '@expo/vector-icons'; 
 
 
 export default function ProfileScreen() {
@@ -26,7 +26,6 @@ export default function ProfileScreen() {
   const [borderColorAnimation] = useState(new Animated.Value(0));
   const [userData, setUserData] = useState(null);
 
-  // Fetch user data
   async function getData() {
     try {
       const token = await AsyncStorage.getItem('token');
@@ -73,17 +72,6 @@ export default function ProfileScreen() {
     }
   }, [userData]);
 
-  useEffect(() => {
-    console.log('Name:', name);
-    console.log('Email:', email);
-    console.log('Phone:', phone);
-    console.log('Country:', country);
-    console.log('State:', state);
-    console.log('City:', city);
-    console.log('ProfilePic:', profilePic);
-    console.log('DOB:', dob);
-  }, [name, email, phone, country, state, city, profilePic, dob]);
-
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -105,23 +93,33 @@ export default function ProfileScreen() {
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found');
   
-      // Update only the passed fields
       const profileData = { ...updatedData };
   
-      // Ensure the profileData is not empty
       Object.keys(profileData).forEach(key => {
         if (profileData[key] == null || profileData[key] === '') {
           delete profileData[key];
         }
       });
   
-      // Make the API call to update profile
       const response = await axios.put('http://192.168.43.60:5050/api/v1/user/profile-update', profileData, {
         headers: { Authorization: `Bearer ${token}` },
       });
   
       if (response.data.success) {
         Alert.alert('Success', 'Profile updated successfully.');
+
+        setUserData(prevUserData => ({
+          ...prevUserData,
+          ...profileData,
+        }));
+
+        if (updatedData.name) setName(updatedData.name);
+        if (updatedData.email) setEmail(updatedData.email);
+        if (updatedData.phone) setPhone(updatedData.phone);
+        if (updatedData.country) setCountry(updatedData.country);
+        if (updatedData.state) setState(updatedData.state);
+        if (updatedData.city) setCity(updatedData.city);
+        if (updatedData.dob) setDob(updatedData.dob);
       } else {
         Alert.alert('Error', response.data.message || 'Failed to update profile.');
       }
@@ -153,7 +151,7 @@ export default function ProfileScreen() {
       const formData = new FormData();
       formData.append('file', {
         uri: photo.uri,
-        name: 'photo.jpg', // Changed to .jpg for consistency
+        name: 'photo.jpg', 
         type: 'image/jpeg',
       });
 
@@ -172,6 +170,7 @@ export default function ProfileScreen() {
       if (response.data.success) {
         setProfilePic(response.data.profilePic.url);
         Alert.alert('Success', 'Profile picture updated');
+        getData();
       } else {
         Alert.alert('Error', response.data.message || 'Failed to update profile picture');
       }
@@ -181,21 +180,7 @@ export default function ProfileScreen() {
     }
   };
 
-  const updateProfile = async (profileData) => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) throw new Error('No token found');
 
-      const response = await axios.put('http://192.168.43.60:5050/api/v1/user/profile-update', profileData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      return response.data;
-    } catch (error) {
-      console.error('Error updating profile:', error.response ? error.response.data : error.message);
-      throw error;
-    }
-  };
 
   const updatePassword = async (passwordData) => {
     try {
@@ -319,7 +304,7 @@ export default function ProfileScreen() {
 >
   <View style={styles.modalContainer}>
     <View style={styles.modalContent}>
-      <MaterialCommunityIcons name="image" size={50} color="#007bff" />
+      <MaterialCommunityIcons name="image" size={50} color="#37AFE1" />
       <Text style={styles.modalTitle}>Select a Photo</Text>
       <Text style={styles.modalSubtitle}>Choose an image from your gallery</Text>
       
@@ -348,29 +333,29 @@ export default function ProfileScreen() {
         style={styles.modalInput}
         value={newValue}
         onChangeText={setNewValue}
-        placeholder={`Edit ${editField}`} // Optional placeholder for clarity
+        placeholder={`Edit ${editField}`} 
       />
       <View style={styles.buttonContainer}>
         <View style={styles.buttonWrapper}>
           <Button 
             title="Save" 
             onPress={() => {
-              if (editField && newValue.trim() !== '') { // Check for empty value
+              if (editField && newValue.trim() !== '') { 
                 const updatedData = { [editField]: newValue };
                 handleSaveProfile(updatedData);
-                setEditModalVisible(false); // Close modal on save
+                setEditModalVisible(false); 
               } else {
-                alert('Please enter a valid value.'); // Alert for invalid input
+                alert('Please enter a valid value.'); 
               }
             }} 
-            color="#4CAF50" // Save button color (green)
+            color="#4CAF50" 
           />
         </View>
         <View style={styles.buttonWrapper}>
           <Button 
             title="Cancel" 
             onPress={() => setEditModalVisible(false)} 
-            color="#F44336" // Cancel button color (red)
+            color="#F44336" 
           />
         </View>
       </View>
@@ -469,7 +454,7 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: '#ffffff',
     borderRadius: 10,
-    borderColor: '#1E88E5',
+    borderColor: '#4CC9FE',
     borderWidth: 1,
   },
   infoLabel: {
@@ -509,17 +494,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Darkened background overlay
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', 
   },
   modalContent: {
-    width: '85%', // Adjusted width
+    width: '85%', 
     padding: 20,
     backgroundColor: '#ffffff',
-    borderRadius: 15, // Smoother rounded corners
-    borderColor: '#ccc', // Soft border color for the modal
-    borderWidth: 1, // Added border around modal
-    elevation: 5, // Shadow for Android
-    shadowColor: '#000', // Shadow for iOS
+    borderRadius: 15, 
+    borderColor: '#ccc', 
+    borderWidth: 1, 
+    elevation: 5, 
+    shadowColor: '#000', 
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
@@ -539,7 +524,7 @@ const styles = StyleSheet.create({
   imgButton: {
     width: '100%',
     height: 50,
-    backgroundColor: '#007bff', // Blue for action button
+    backgroundColor: '#37AFE1', 
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 8,
@@ -548,10 +533,10 @@ const styles = StyleSheet.create({
   modalInput: {
     width: '100%',
     padding: 10,
-    marginBottom: 20, // Spacing below the input
-    backgroundColor: '#F0F0F0', // Softer background color for input
+    marginBottom: 20, 
+    backgroundColor: '#F0F0F0', 
     borderRadius: 10,
-    borderColor: '#1E88E5', // Slightly bright blue border
+    borderColor: '#1E88E5',
     borderWidth: 1.5,
     fontSize: 16,
     color: '#333',
@@ -570,18 +555,18 @@ const styles = StyleSheet.create({
   cancelImgButton: {
     width: '100%',
     height: 50,
-    backgroundColor: '#dc3545', // Red for cancel button
+    backgroundColor: '#dc3545', 
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 8,
   },
   buttonContainer: {
-    flexDirection: 'row', // Row layout for buttons
-    justifyContent: 'space-between', // Space between the buttons
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
   },
   buttonWrapper: {
-    flex: 1, // Equal button width
-    marginHorizontal: 5, // Spacing between buttons
+    flex: 1, 
+    marginHorizontal: 5, 
   },
   button: {
     flex: 1,
@@ -604,7 +589,7 @@ const styles = StyleSheet.create({
   cancelImgButton: {
     width: '100%',
     height: 50,
-    backgroundColor: '#dc3545', // Red for cancel button
+    backgroundColor: '#dc3545',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 8,
@@ -613,6 +598,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  changePasswordButton:{
+    color:'#919191',
   },
   
 });

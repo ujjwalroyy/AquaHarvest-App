@@ -15,24 +15,23 @@ const LoginScreen = () => {
   });
   const [isModalVisible, setModalVisible] = useState(false);
   const [isOtpModalVisible, setOtpModalVisible] = useState(false);
-  const [verificationMethod, setVerificationMethod] = useState(''); // 'contact' or 'email'
+  const [verificationMethod, setVerificationMethod] = useState(''); 
   const [contactNumber, setContactNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState(''); // Added state for password
+  const [password, setPassword] = useState(''); 
   const [newPassword, setNewPassword] = useState('');
 
   useEffect(() => {
     if (response?.type === 'success') {
       const { id_token } = response.params;
       console.log('ID Token:', id_token);
-      // Handle successful authentication here
     }
   }, [response]);
 
   const handleLogin = () => {
     console.log('Login button clicked');
-    navigation.navigate('Home'); // Navigate to HomeScreen when login button is clicked
+    navigation.navigate('Home'); 
   };
 
   const handleForgotPassword = () => {
@@ -47,7 +46,6 @@ const LoginScreen = () => {
 
   const handleSendOtp = () => {
     if (contactNumber.length === 10) {
-      // Implement OTP sending logic here
       console.log('Sending OTP to:', contactNumber);
     } else {
       alert('Please enter a valid 10-digit contact number.');
@@ -56,7 +54,6 @@ const LoginScreen = () => {
 
   const handleSendResetLink = () => {
     if (email) {
-      // Implement reset link sending logic here
       console.log('Sending reset link to:', email);
     } else {
       alert('Please enter a valid email address.');
@@ -65,7 +62,6 @@ const LoginScreen = () => {
 
   const handleSubmitOtp = () => {
     if (otp.length === 6) {
-      // Implement OTP verification logic here
       console.log('Verifying OTP:', otp);
       setOtpModalVisible(false);
     } else {
@@ -75,7 +71,6 @@ const LoginScreen = () => {
 
   const handleResetPassword = () => {
     if (newPassword) {
-      // Implement password reset logic here
       console.log('Resetting password:', newPassword);
     } else {
       alert('Please enter a new password.');
@@ -84,7 +79,7 @@ const LoginScreen = () => {
 
   const closeModal = () => {
     setModalVisible(false);
-    setVerificationMethod(''); // Reset verification method
+    setVerificationMethod('');
   };
 
   return (
@@ -117,7 +112,7 @@ const LoginScreen = () => {
               placeholder="Enter Email"
               keyboardType="email-address"
               value={email}
-              onChangeText={setEmail} // Update email state
+              onChangeText={setEmail} 
             />
           </View>
 
@@ -128,15 +123,14 @@ const LoginScreen = () => {
               placeholder="Enter Password"
               secureTextEntry
               value={password}
-              onChangeText={setPassword} // Update password state
+              onChangeText={setPassword} 
             />
           </View>
 
-          {/* Disable login button if either email or password is empty */}
           <TouchableOpacity
             onPress={handleLogin}
-            style={[styles.loginButton, (email === '' || password === '') && styles.loginButtonDisabled]} // Apply disabled style
-            disabled={email === '' || password === ''} // Disable button
+            style={[styles.loginButton, (email === '' || password === '') && styles.loginButtonDisabled]} 
+            disabled={email === '' || password === ''} 
           >
             <Text style={styles.loginButtonText}>Login</Text>
           </TouchableOpacity>
@@ -149,19 +143,18 @@ const LoginScreen = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => promptAsync()} // Trigger Google login
+            onPress={() => promptAsync()} 
             style={styles.googleButton}
-            disabled={!request} // Disable button if request is not ready
+            disabled={!request} 
           >
             <Image 
-              source={require('../assets/icons/google.png')} // Replace with your path to google.png
+              source={require('../assets/icons/google.png')} 
               style={styles.googleImage}
             />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Password Reset Selection Modal */}
       <Modal
         transparent={true}
         visible={isModalVisible}
@@ -192,7 +185,6 @@ const LoginScreen = () => {
         </View>
       </Modal>
 
-      {/* OTP / Reset Password Modal */}
       <Modal
         transparent={true}
         visible={isOtpModalVisible}
@@ -322,7 +314,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   loginButtonDisabled: {
-    backgroundColor: 'lightgray', // Disable color
+    backgroundColor: 'lightgray',
   },
   loginButtonText: {
     fontSize: 18,

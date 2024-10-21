@@ -1,5 +1,6 @@
 import express from 'express';
 import { 
+  getAllUsersController,
   getUserProfileController, 
   loginController, 
   logoutController, 
@@ -21,6 +22,8 @@ const router = express.Router();
 router.post('/register', registerController);
 
 router.post('/register/verify', verifyOtpController);
+
+router.get('/get-all-user', getAllUsersController)
 
 router.post('/signin', loginController);
 

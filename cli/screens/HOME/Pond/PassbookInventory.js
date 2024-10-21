@@ -28,17 +28,17 @@ const PassbookInventory = ({ route, navigation }) => {
     switch (filterType) {
       case 'pastDays':
         const pastDaysDate = new Date();
-        pastDaysDate.setDate(now.getDate() - 30); // Last 30 days
+        pastDaysDate.setDate(now.getDate() - 30); 
         filtered = filtered.filter(item => new Date(item.date) >= pastDaysDate);
         break;
       case 'last3Months':
         const last3MonthsDate = new Date();
-        last3MonthsDate.setMonth(now.getMonth() - 3); // Last 3 months
+        last3MonthsDate.setMonth(now.getMonth() - 3); 
         filtered = filtered.filter(item => new Date(item.date) >= last3MonthsDate);
         break;
       case 'last6Months':
         const last6MonthsDate = new Date();
-        last6MonthsDate.setMonth(now.getMonth() - 6); // Last 6 months
+        last6MonthsDate.setMonth(now.getMonth() - 6); 
         filtered = filtered.filter(item => new Date(item.date) >= last6MonthsDate);
         break;
       case 'custom':
@@ -56,7 +56,7 @@ const PassbookInventory = ({ route, navigation }) => {
                                      .reduce((sum, item) => sum - parseFloat(item.cost || 0), 0); // Expenses are negative
     const totalIncome = filteredData.filter(item => item.type === 'income')
                                     .reduce((sum, item) => sum + parseFloat(item.cost || 0), 0); // Incomes are positive
-    return totalIncome + totalExpense; // Combining incomes and expenses
+    return totalIncome + totalExpense; 
   };
 
   const renderRecord = ({ item, index }) => {
@@ -198,32 +198,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   headerExpense: {
-    backgroundColor: '#E0F7FA', // Sky Blue for expenses
+    backgroundColor: '#E0F7FA', 
   },
   headerProductName: {
-    backgroundColor: '#FCE4EC', // Light Pink for income product names
-  },
-  headerQuantity: {
-    // Customize as needed
-  },
-  headerCost: {
-    // Customize as needed
-  },
-  headerRemark: {
-    // Customize as needed
-  },
-  headerDate: {
-    // Customize as needed
+    backgroundColor: '#FCE4EC', 
   },
   tableRow: {
     flexDirection: 'row',
     paddingVertical: 8,
   },
   expenseRow: {
-    backgroundColor: '#E0F7FA', // Sky Blue for expenses
+    backgroundColor: '#E0F7FA', 
   },
   incomeRow: {
-    backgroundColor: '#FCE4EC', // Light Pink for income
+    backgroundColor: '#FCE4EC', 
   },
   tableCell: {
     flex: 1,

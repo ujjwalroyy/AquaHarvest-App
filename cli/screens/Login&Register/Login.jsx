@@ -20,6 +20,8 @@ import axios from "axios";
 import styles from "./style.js";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BackHandler } from 'react-native';
+
 
 const themeColors = { bg: '#B6E6FC' };
 
@@ -35,7 +37,13 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [isOtpModalVisible, setOtpModalVisible] = useState(false);
-  const [verificationMethod, setVerificationMethod] = useState(''); // 'contact' or 'email'
+  const [verificationMethod, setVerificationMethod] = useState(''); 
+
+  const handleBackPress = () => {
+    navigation.navigate('Welcome'); 
+    return true; 
+  };
+
 
   const handleSubmit = () => {
     if (phoneVerify && passwordVerify) {
@@ -84,7 +92,6 @@ function LoginPage() {
 
   const handleSendResetLink = () => {
     if (email) {
-      // Implement reset link sending logic here
       console.log('Sending reset link to:', email);
     } else {
       Alert.alert('Invalid Email', 'Please enter a valid email address.');
@@ -151,7 +158,6 @@ function LoginPage() {
     }
   };
   useEffect(() => {
-    // Set up URL listener
     const subscription = Linking.addEventListener('url', handleRedirect);
 
     return () => {
@@ -203,223 +209,222 @@ function LoginPage() {
 
   return (
     <ScrollView
-      contentContainerStyle={{ flexGrow: 1 }}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="always"
-      style={{ backgroundColor: themeColors.bg, paddingVertical: 10 }}
-    >
-      <View>
-        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 10 }}>
-          <Image
-            style={styles.image}
-            source={require("../../assets/images/welcome.png")}
-            resizeMode="contain"
-          />
-        </View>
-        <View style={styles.loginContainer}>
-          <Text style={styles.text_header}>Fishy...</Text>
+    contentContainerStyle={{ flexGrow: 1 }}
+    showsVerticalScrollIndicator={false}
+    keyboardShouldPersistTaps="always"
+    style={{ backgroundColor: themeColors.bg, paddingVertical: 10 }}
+  >
+    <View>
+      <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 10 }}>
+        <Image
+          style={styles.image}
+          source={require("../../assets/images/welcome3.png")}
+          resizeMode="contain"
+        />
+      </View>
+      <View style={styles.loginContainer}>
 
-          <View style={styles.action}>
-            <FontAwesome name="mobile" color="#420475" size={35} style={{ paddingRight: 10, marginTop: -7, marginLeft: 5 }} />
-            <TextInput
-              placeholder="Phone"
-              style={styles.textInput}
-              onChangeText={handleChangePhone(setPhone, validatePhoneNum)}
-              maxLength={13}
-            />
-            {phoneVerify && <Feather name="check-circle" color="green" size={20} />}
-            {!phoneVerify && validatePhoneNum.length > 2 && <Error name="warning" color="red" size={20} />}
-          </View>
-          {validatePhoneNum.length <= 2 ? null : !phoneVerify && (
-            <Text style={{ marginLeft: 20, color: "red" }}>Phone number should start with 6-9 and be followed by 9 digits</Text>
-          )}
+        <View style={styles.action}>
+          <FontAwesome name="mobile" color="#37AFE1" size={35} style={{ paddingRight: 10, marginTop: -7, marginLeft: 5 }} />
+          <TextInput
+            placeholder="Phone"
+            style={styles.textInput}
+            onChangeText={handleChangePhone(setPhone, validatePhoneNum)}
+            maxLength={13}
+          />
+          {phoneVerify && <Feather name="check-circle" color="green" size={20} />}
+          {!phoneVerify && validatePhoneNum.length > 2 && <Error name="warning" color="red" size={20} />}
+        </View>
+        {validatePhoneNum.length <= 2 ? null : !phoneVerify && (
+          <Text style={{ marginLeft: 20, color: "red" }}>Phone number should start with 6-9 and be followed by 9 digits</Text>
+        )}
 
 <View style={styles.action}>
-            <FontAwesome name="lock" color="#420475" style={styles.smallIcon} />
-            <TextInput
-              placeholder="Password"
-              style={styles.textInput}
-              onChange={handlePassword}
-              secureTextEntry={!showPassword}
-              value={password}
+          <FontAwesome name="lock" color="#37AFE1" style={styles.smallIcon} />
+          <TextInput
+            placeholder="Password"
+            style={styles.textInput}
+            onChange={handlePassword}
+            secureTextEntry={!showPassword}
+            value={password}
+          />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+            <Feather
+              name={password.length <= 2 ? null : showPassword ? "eye" : "eye-off"}
+              style={{ marginRight: -9 }}
+              color={passwordVerify ? "green" : "red"}
+              size={23}
             />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Feather
-                name={password.length <= 2 ? null : showPassword ? "eye" : "eye-off"}
-                style={{ marginRight: -9 }}
-                color={passwordVerify ? "green" : "red"}
-                size={23}
-              />
-            </TouchableOpacity>
-          </View>
-          {password.length > 0 && !passwordVerify && (
-            <Text style={{ marginLeft: 20, color: "red" }}>
-              Password must include uppercase, lowercase, a number, and be at least 6 characters long.
-            </Text>
-          )}
+          </TouchableOpacity>
+        </View>
+        {password.length > 0 && !passwordVerify && (
+          <Text style={{ marginLeft: 20, color: "red" }}>
+            Password must include uppercase, lowercase, a number, and be at least 6 characters long.
+          </Text>
+        )}
 
-          <View
-            style={{
-              justifyContent: "flex-end",
-              alignItems: "flex-end",
-              marginTop: 8,
-              marginRight: 10,
-            }}
+        <View
+          style={{
+            justifyContent: "flex-end",
+            alignItems: "flex-end",
+            marginTop: 8,
+            marginRight: 10,
+          }}
+        >
+          <TouchableOpacity
+            onPress={handleForgotPassword}
+            style={styles.forgotPasswordButton}
           >
-            <TouchableOpacity
-              onPress={handleForgotPassword}
-              style={styles.forgotPasswordButton}
-            >
-              <Text style={{ color: "#4F4F4F", fontWeight: "700" }}>
-                Forgot Password
-              </Text>
-            </TouchableOpacity>
+            <Text style={{ color: "#919191", fontWeight: "700" }}>
+              Forgot Password
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.button}>
+        <TouchableOpacity style={styles.inBut} onPress={handleSubmit}>
+          <View>
+            <Text style={styles.textSign}>Log in</Text>
           </View>
+        </TouchableOpacity>
+
+        <View style={{ padding: 15 }}>
+          <Text style={{ fontSize: 14, fontWeight: "bold", color: "#919191" }}>
+            ------Or Continue as------
+          </Text>
         </View>
 
-        <View style={styles.button}>
-          <TouchableOpacity style={styles.inBut} onPress={handleSubmit}>
-            <View>
-              <Text style={styles.textSign}>Log in</Text>
+        <Modal
+          transparent={true}
+          visible={isModalVisible}
+          onRequestClose={closeModal}
+        >
+          <View style={styles.modalBackground}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Reset Password</Text>
+              <TouchableOpacity
+                onPress={() => handleVerificationMethod('contact')}
+                style={styles.modalButton}
+              >
+                <Text style={styles.modalButtonText}>Verify via Phone</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => handleVerificationMethod('email')}
+                style={styles.modalButton}
+              >
+                <Text style={styles.modalButtonText}>Verify via Email</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={closeModal}
+                style={styles.modalCloseButton}
+              >
+                <Text style={styles.modalCloseButtonText}>Close</Text>
+              </TouchableOpacity>
             </View>
-          </TouchableOpacity>
-
-          <View style={{ padding: 15 }}>
-            <Text style={{ fontSize: 14, fontWeight: "bold", color: "#919191" }}>
-              ------Or Continue as------
-            </Text>
           </View>
+        </Modal>
 
-          <Modal
-            transparent={true}
-            visible={isModalVisible}
-            onRequestClose={closeModal}
-          >
-            <View style={styles.modalBackground}>
-              <View style={styles.modalContainer}>
-                <Text style={styles.modalTitle}>Reset Password</Text>
-                <TouchableOpacity
-                  onPress={() => handleVerificationMethod('contact')}
-                  style={styles.modalButton}
-                >
-                  <Text style={styles.modalButtonText}>Verify via Phone</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => handleVerificationMethod('email')}
-                  style={styles.modalButton}
-                >
-                  <Text style={styles.modalButtonText}>Verify via Email</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={closeModal}
-                  style={styles.modalCloseButton}
-                >
-                  <Text style={styles.modalCloseButtonText}>Close</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
-
-          <Modal
-  transparent={true}
-  visible={isOtpModalVisible}
-  onRequestClose={() => setOtpModalVisible(false)}
+        <Modal
+transparent={true}
+visible={isOtpModalVisible}
+onRequestClose={() => setOtpModalVisible(false)}
 >
-  <View style={styles.modalBackground}>
-    <ScrollView contentContainerStyle={styles.modalContainer}>
-      {verificationMethod === 'contact' ? (
-        <>
-          <Text style={styles.modalTitle}>Verify via Phone</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter Phone Number"
-            keyboardType="phone-pad"
-            maxLength={13}
-            value={phone}
-            onChangeText={setPhone}
-          />
-          <TouchableOpacity
-            onPress={handleSendOtp}
-            style={styles.modalButton}
-          >
-            <Text style={styles.modalButtonText}>Send OTP</Text>
-          </TouchableOpacity>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter OTP"
-            keyboardType="numeric"
-            maxLength={6}
-            value={otp}
-            onChangeText={setOtp}
-          />
-          <TouchableOpacity
-            onPress={handleSubmitOtp}
-            style={styles.modalButton}
-          >
-            <Text style={styles.modalButtonText}>Submit OTP</Text>
-          </TouchableOpacity>
-        </>
-      ) : (
-        <>
-          <Text style={styles.modalTitle}>Verify via Email</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter Email"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-          />
-          <TouchableOpacity
-            onPress={handleSendResetLink}
-            style={styles.modalButton}
-          >
-            <Text style={styles.modalButtonText}>Send Reset Link</Text>
-          </TouchableOpacity>
-        </>
-      )}
-      <TouchableOpacity
-        onPress={() => setOtpModalVisible(false)}
-        style={styles.modalCloseButton}
-      >
-        <Text style={styles.modalCloseButtonText}>Close</Text>
-      </TouchableOpacity>
-    </ScrollView>
-  </View>
+<View style={styles.modalBackground}>
+  <ScrollView contentContainerStyle={styles.modalContainer}>
+    {verificationMethod === 'contact' ? (
+      <>
+        <Text style={styles.modalTitle}>Verify via Phone</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter Phone Number"
+          keyboardType="phone-pad"
+          maxLength={13}
+          value={phone}
+          onChangeText={setPhone}
+        />
+        <TouchableOpacity
+          onPress={handleSendOtp}
+          style={styles.modalButton}
+        >
+          <Text style={styles.modalButtonText}>Send OTP</Text>
+        </TouchableOpacity>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter OTP"
+          keyboardType="numeric"
+          maxLength={6}
+          value={otp}
+          onChangeText={setOtp}
+        />
+        <TouchableOpacity
+          onPress={handleSubmitOtp}
+          style={styles.modalButton}
+        >
+          <Text style={styles.modalButtonText}>Submit OTP</Text>
+        </TouchableOpacity>
+      </>
+    ) : (
+      <>
+        <Text style={styles.modalTitle}>Verify via Email</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter Email"
+          keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
+        />
+        <TouchableOpacity
+          onPress={handleSendResetLink}
+          style={styles.modalButton}
+        >
+          <Text style={styles.modalButtonText}>Send Reset Link</Text>
+        </TouchableOpacity>
+      </>
+    )}
+    <TouchableOpacity
+      onPress={() => setOtpModalVisible(false)}
+      style={styles.modalCloseButton}
+    >
+      <Text style={styles.modalCloseButtonText}>Close</Text>
+    </TouchableOpacity>
+  </ScrollView>
+</View>
 </Modal>
 
 
-          <View style={styles.bottomButton}>
-            <View style={{ alignItems: "center", justifyContent: "center" }}>
-              <TouchableOpacity
-                style={styles.inBut2}
-                onPress={() => navigation.navigate("Register")}
-              >
-                <FontAwesome
-                  name="user-plus"
-                  color="white"
-                  style={[styles.smallIcon2, { fontSize: 30 }]}
-                />
-              </TouchableOpacity>
-              <Text style={styles.bottomText}>Sign Up</Text>
-            </View>
+        <View style={styles.bottomButton}>
+          <View style={{ alignItems: "center", justifyContent: "center" }}>
+            <TouchableOpacity
+              style={styles.inBut2}
+              onPress={() => navigation.navigate("Register")}
+            >
+              <FontAwesome
+                name="user-plus"
+                color="white"
+                style={[styles.smallIcon2, { fontSize: 30 }]}
+              />
+            </TouchableOpacity>
+            <Text style={styles.bottomText}>Sign Up</Text>
+          </View>
 
-            <View style={{ alignItems: "center", justifyContent: "center" }}>
-              <TouchableOpacity
-                style={styles.inBut2}
-                onPress={() => Alert.alert("Coming Soon", "This feature is under development.")} 
-              >
-                <FontAwesome
-                  name="google"
-                  color="white"
-                  style={[styles.smallIcon2, { fontSize: 30 }]}
-                />
-              </TouchableOpacity>
-              <Text style={styles.bottomText}>Google</Text>
-            </View>
+          <View style={{ alignItems: "center", justifyContent: "center" }}>
+            <TouchableOpacity
+              style={styles.inBut2}
+              onPress={() => Alert.alert("Coming Soon", "This feature is under development.")} 
+            >
+              <FontAwesome
+                name="google"
+                color="white"
+                style={[styles.smallIcon2, { fontSize: 30 }]}
+              />
+            </TouchableOpacity>
+            <Text style={styles.bottomText}>Google</Text>
           </View>
         </View>
       </View>
-    </ScrollView>
+    </View>
+  </ScrollView>
   );
 }
 

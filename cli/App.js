@@ -17,11 +17,12 @@ import PondInventory from "./screens/HOME/Pond/PondInventory.js";
 import PondTest from "./screens/HOME/Pond/PondTest.js";
 import PassbookInventory from "./screens/HOME/Pond/PassbookInventory.js";
 import Inventory from './screens/HOME/Inventory/inventory.js'
-import Notifications from './screens/Market/Notifications.js'
 import Categories from './screens/Market/Category.js'
 import ProductDetails from './screens/Market/ProductDetails.js'
 import Dashboard from './screens/User/Dashboard.js'
 import PondHealth from "./screens/HOME/Pond/PondHelth.js";
+import AboutUs from "./screens/AboutUs.js"
+import Gallary from "./screens/HOME/Gallary/Gallary.js"
 
 const toastConfig = {
   success: (props) => (
@@ -86,9 +87,10 @@ const Continue = () => (
     <Stack.Screen name="PondReport" component={PondReport} />
     <Stack.Screen name="PondInventory" component={PondInventory} />
     <Stack.Screen name="PondTest" component={PondTest} />
+    <Stack.Screen name="Gallary" component={Gallary} />
     <Stack.Screen name="PassbookInventory" component={PassbookInventory}/>
     <Stack.Screen name="ProductDetails" component={ProductDetails}/>
-    <Stack.Screen name="Notifications" component={Notifications}/>
+    <Stack.Screen name="AboutUs" component={AboutUs}/>
     <Stack.Screen name="Category" component={Categories}/>
     <Stack.Screen name="LoginNav" component={LoginNav} />
   </Stack.Navigator>
@@ -102,7 +104,6 @@ const LoginNav = () => (
     <Stack.Screen name="Continue" component={Continue} />
   </Stack.Navigator>
 );
-
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);

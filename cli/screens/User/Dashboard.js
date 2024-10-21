@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { BarChart } from 'react-native-chart-kit';
+import {Ionicons } from '@expo/vector-icons';
+
 
 const Dashboard = ({ route, navigation }) => {
   const { profitOrLoss: initialProfitOrLoss, income: initialIncome, expenses: initialExpenses } = route.params;
@@ -45,7 +47,10 @@ const Dashboard = ({ route, navigation }) => {
       </TouchableOpacity> */}
 
 <View style={styles.titleContainer}>
-        <Text style={styles.title}>Farm Dashboard</Text>
+<TouchableOpacity onPress={() => navigation.goBack()} style={styles.backArrow}>
+      <Ionicons name="arrow-back" size={24} color="#000" />
+      </TouchableOpacity>
+        <Text style={styles.title}> Farm Dashboard</Text>
       </View>
 
       {/* Summary Section */}
@@ -126,10 +131,31 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   title: {
-    fontSize: 28,
+   fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
-    color: '#333',
+    backgroundColor: '#37AFE1',
+    marginBottom: 16,
+    marginTop: 16,
+    textAlign: 'center',
+    paddingVertical:12,
+    paddingLeft:80,
+    paddingRight:80,
+    color: '#fff',
+  },
+  backArrow:{
+    height:32,
+    width:48,
+    backgroundColor: '#FFFECB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    marginTop: 14,
+    paddingBottom: 1,
+    paddingHorizontal: 2,
+    borderRadius: 3,
+    alignItems:'center',
+    justifyContent:'center',
+    borderRadius: 3,
   },
   summaryContainer: {
     backgroundColor: '#fff',

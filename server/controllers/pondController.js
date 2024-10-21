@@ -27,7 +27,7 @@ export const createPond = async (req, res) => {
       stockingDensity,
       feedType,
       userId,
-      lastTestDate: lastTestDate ? new Date(lastTestDate) : null // Handle optional lastTestDate
+      lastTestDate: lastTestDate ? new Date(lastTestDate) : null
     };
 
     const newPond = await Pond.create(pondData);
@@ -99,12 +99,18 @@ export const updatePond = async (req, res) => {
 export const updatePondTestDate = async (req, res) => {
   try {
     const { pondId } = req.params;
+    console.log("Triggered.............");
+    const startTime = Date.now(); 
 
     const updatedPond = await Pond.findByIdAndUpdate(
       pondId,
       { lastTestDate: new Date() },
       { new: true } 
-    ).populate('userId');;
+    ).populate('userId');
+
+
+    const dbOperationTime = Date.now() - startTime; 
+    console.log(`Time taken for DB operation: ${dbOperationTime}ms`);
 
     if (!updatedPond) {
       return res.status(404).json({ message: 'Pond not found' });
@@ -113,7 +119,15 @@ export const updatePondTestDate = async (req, res) => {
     const phoneNumber = updatedPond.userId.phone;
     const pondName = updatedPond.name;
 
-    await sendTestReminderSMS(phoneNumber, pondName);
+    sendTestReminderSMS(phoneNumber, pondName)
+    .then(() => {
+      console.log('SMS sent successfully');
+    })
+    .catch((error) => {
+      console.error('Failed to send SMS:', error);
+    });
+
+  console.log(`Time taken for DB operation: ${Date.now() - startTime}ms`);
 
     res.status(200).json({ message: 'Pond test date updated and SMS sent successfully', pond: updatedPond });
   } catch (error) {
@@ -124,29 +138,20 @@ export const updatePondTestDate = async (req, res) => {
 
 export const checkPondTimers = async (req, res) => {
   try {
-    const ponds = await Pond.find().populate('userId'); 
-    console.log('Fetched ponds:', ponds); // Log ponds
-
+    const ponds = await Pond.find().populate('userId');
     const now = Date.now();
 
     const overduePonds = ponds.filter(pond => {
       const lastTestDate = new Date(pond.lastTestDate);
-      if (isNaN(lastTestDate.getTime())) {
-        console.log(`Invalid lastTestDate for pond: ${pond.name}`); // Log invalid date
-        return false; // Skip invalid dates
-      }
-      return (now - lastTestDate.getTime()) >= 864000000; // Check if 10 days (in ms) have passed
+      return (now - lastTestDate.getTime()) >= 864000000; 
     });
-    console.log('Overdue ponds:', overduePonds);
 
     for (const pond of overduePonds) {
       if (pond.userId && pond.userId.phone) {
-        const phoneNumber = pond.userId.phone;
-        await sendTestReminderSMS(phoneNumber, pond.name); // Send SMS using Twilio
-      } else {
-        console.log(`No phone number found for user with pond ${pond.name}`); // Log missing phone numbers
+        await sendTestReminderSMS(pond.userId.phone, pond.name);
       }
     }
+
     res.status(200).json({ message: 'Checked all pond timers and sent SMS for overdue tests' });
   } catch (error) {
     console.error('Error checking pond timers:', error);
@@ -159,7 +164,7 @@ export const sendTestReminderSMS = async (phoneNumber, pondName) => {
     const message = await client.messages.create({
       body: `Reminder: It's time to test the pond '${pondName}'!`,
       from: TWILIO_PHONE_NUMBER,
-      to: phoneNumber           // The user's phone number
+      to: phoneNumber
     });
 
     console.log('SMS sent:', message.sid);
@@ -167,5 +172,15 @@ export const sendTestReminderSMS = async (phoneNumber, pondName) => {
   } catch (error) {
     console.error('Failed to send SMS:', error);
     throw new Error('SMS sending failed');
+  }
+};
+
+export const getPondsByUser = async (req, res) => {
+  try {
+    const userId = req.user.id; 
+    const ponds = await Pond.find({ userId: userId }); 
+    res.status(200).json(ponds);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching ponds for user' });
   }
 };

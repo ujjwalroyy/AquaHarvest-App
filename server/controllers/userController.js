@@ -149,7 +149,6 @@ export const verifyForgetOtpController = async (req, res) => {
       });
     }
 
-    // Find the temporary OTP record
     const tempOtp = await TempOtpModel.findOne({ phone, otp });
 
     if (!tempOtp) {
@@ -166,10 +165,8 @@ export const verifyForgetOtpController = async (req, res) => {
       });
     }
 
-    // Optionally, you can find and delete the user from TempUserModel if needed
     await TempUserModel.deleteOne({ phone });
 
-    // Find the existing user
     const existingUser = await userModel.findOne({ phone });
 
     if (!existingUser) {
@@ -234,11 +231,7 @@ export const verifyOtpController = async (req, res) => {
       name: tempUser.name,
       email: tempUser.email,
       password: tempUser.password,
-      // address: tempUser.address,
-      // city: tempUser.city,
-      // country: tempUser.country,
       phone: tempUser.phone,
-      // answer: tempUser.answer,
       isVerified: true,
     });
 
@@ -279,8 +272,6 @@ export const googleAuthCallbackController = async (req, res, next) => {
         await existingUser.save();
       }
 
-      // Start a session or issue a token
-      // const token = generateToken(existingUser); 
 
       res.redirect('/profile'); 
     } catch (error) {
@@ -328,7 +319,7 @@ export const loginController = async (req, res) => {
       .status(200)
       .cookie("token", token, {
         expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-        secure: process.env.NODE_ENV === "production", // Set secure cookies in production
+        secure: process.env.NODE_ENV === "production", 
         httpOnly: true,
         sameSite: 'strict',
       })
@@ -348,229 +339,6 @@ export const loginController = async (req, res) => {
   }
 };
 
-
-
-
-// export const registerController = async (req, res) => {
-//   try {
-//     const { name, email, password, address, city, country, phone, answer } = req.body;
-//     if (
-//       !name ||
-//       !email ||
-//       !password ||
-//       !address ||
-//       !city ||
-//       !country ||
-//       !phone ||
-//       !answer
-//     ) {
-//       return res.status(400).send({
-//         success: false,
-//         message: "Please Provide All Fields",
-//       });
-//     }
-
-//     const existingUser = await userModel.findOne({ email });
-//     if (existingUser) {
-//       return res.status(400).send({
-//         success: false,
-//         message: "Email already taken",
-//       });
-//     }
-
-//     const otp = generateOTP();
-
-//     try {
-//       await sendOTPEmail(email, otp);
-//       console.log(`OTP sent to ${email}`);
-//     } catch (error) {
-//       return res.status(500).send({
-//         success: false,
-//         message: "Failed to send OTP email",
-//         error,
-//       });
-//     }
-
-//     const user = await userModel.create({
-//       name,
-//       email,
-//       password,
-//       address,
-//       city,
-//       country,
-//       phone,
-//       answer,
-//       otp, 
-//       otpExpires: Date.now() + 10 * 60 * 1000 
-//     });
-
-//     res.status(201).send({
-//       success: true,
-//       message: "OTP sent to your email. Please verify to complete registration.",
-//       user: { email: user.email, _id: user._id }, 
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).send({
-//       success: false,
-//       message: "Error In Register API",
-//       error,
-//     });
-//   }
-// };
-
-// export const verifyOtpController = async (req, res) => {
-//   try {
-//     const { email, otp } = req.body;
-//     if (!email || !otp) {
-//       return res.status(400).send({
-//         success: false,
-//         message: "Please provide email and OTP",
-//       });
-//     }
-
-//     const user = await userModel.findOne({ email, otp });
-//     if (!user) {
-//       return res.status(400).send({
-//         success: false,
-//         message: "Invalid OTP or email",
-//       });
-//     }
-
-//     if (Date.now() > user.otpExpires) {
-//       return res.status(400).send({
-//         success: false,
-//         message: "OTP has expired. Please register again.",
-//       });
-//     }
-
-//     user.otp = undefined;
-//     user.otpExpires = undefined;
-//     await user.save();
-
-//     res.status(200).send({
-//       success: true,
-//       message: "OTP verified successfully. Registration complete.",
-//       user,
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).send({
-//       success: false,
-//       message: "Error In OTP Verification",
-//       error,
-//     });
-//   }
-// };
-
-
-// export const registerController = async (req, res) => {
-//   try {
-//     const { name, email, password, address, city, country, phone, answer } = req.body;
-//     if (
-//       !name ||
-//       !email ||
-//       !password ||
-//       !address ||
-//       !city ||
-//       !country ||
-//       !phone || !answer
-//     ) {
-//       return res.status(500).send({
-//         success: false,
-//         message: "Please Provide All Fields",
-//       });
-//     }
-
-//     //existing user
-//     const existingUser = await userModel.findOne({ email });
-//     if (existingUser) {
-//       return res.status(500).send({
-//         success: false,
-//         message: "email already taken",
-//       });
-//     }
-
-//     const user = await userModel.create({
-//       name,
-//       email,
-//       password,
-//       address,
-//       city,
-//       country,
-//       phone,
-//       answer
-//     });
-//     res.status(201).send({
-//       success: true,
-//       message: "Registration success, please login",
-//       user,
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).send({
-//       success: false,
-//       message: "Error In Register API",
-//       error,
-//     });
-//   }
-// };
-
-
-
-// export const loginController = async (req, res) => {
-//   try {
-//     const { email, password } = req.body;
-   
-//     if (!email || !password) {
-//       return res.status(400).send({
-//         success: false,
-//         message: "Please Add Email or Password",
-//       });
-//     }
-//     const user = await userModel.findOne({email });
-//     if (!user) {
-//       return res.status(404).send({
-//         success: false,
-//         message: "User not found",
-//       });
-//     }
-//     const isMatch = await user.comparePassword(password);
-//     if (!isMatch) {
-//       return res.status(400).send({
-//         success: false,
-//         message: "invalid credentials",
-//       });
-//     }
-//     const token = user.generateToken();
-//     res
-//       .status(200)
-//       .cookie("token", token, {
-//         expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-//         secure:process.env.NODE_ENV === "development"?true:false,
-//         httpOnly: true,
-//         sameSite: 'strict',
-//       })
-//       .send({
-//         success: true,
-//         message: "Login Successfully",
-//         token,
-//         user,
-//       });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).send({
-//       success: "false",
-//       message: "Error In Login Api",
-//       error,
-//     });
-//   }
-// };
-
-
-
-
-//Get user profile
 export const getUserProfileController = async(req, res) => {
     try {
         const user = await userModel.findById(req.user._id)
@@ -591,14 +359,38 @@ export const getUserProfileController = async(req, res) => {
     }
 }
 
+export const getAllUsersController = async (req, res) => {
+  try {
+    const users = await userModel.find({}, { password: 0 }); 
 
-//logout
+    if (!users || users.length === 0) {
+      return res.status(404).send({
+        success: false,
+        message: "No users found",
+      });
+    }
+
+    res.status(200).send({
+      success: true,
+      message: "Users fetched successfully",
+      users,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error fetching users",
+      error: error.message || error,
+    });
+  }
+};
+
 export const logoutController = async (req, res) =>{
   console.log('Logout request:', req.body);
     try {
         res.status(200).cookie("token", "", {
             expires: new Date(Date.now()),
-            secure: process.env.NODE_ENV === "production", // Set secure cookies in production
+            secure: process.env.NODE_ENV === "production", 
             httpOnly: true,
         sameSite: 'strict',
           }).json({
@@ -616,7 +408,6 @@ export const logoutController = async (req, res) =>{
     }
 }
 
-//update profile
 export const updateProfileController = async(req, res) =>{
     try {
         const user = await userModel.findById(req.user._id)
@@ -638,13 +429,10 @@ export const updateProfileController = async(req, res) =>{
         if(country) user.country = country
         if(phone) user.phone = phone
         if (dob) {
-          // Split the input assuming it's in DD/MM/YYYY format
           const [day, month, year] = dob.split('/');
           
-          // Create a new Date object
           const parsedDob = new Date(`${year}-${month}-${day}`);
           
-          // Check if the parsed date is valid
           if (isNaN(parsedDob.getTime())) {
             return res.status(400).send({
               success: false,
@@ -652,14 +440,11 @@ export const updateProfileController = async(req, res) =>{
             });
           }
           
-          // Format the date to YYYY-MM-DD
-          const formattedDob = parsedDob.toISOString().split('T')[0]; // Get the date in YYYY-MM-DD format
+          const formattedDob = parsedDob.toISOString().split('T')[0]; 
           
-          // Assign the formatted date to the user's dob field
-          user.dob = formattedDob; // Store as a string
+          user.dob = formattedDob; 
         }
         
-        //save
         console.log("Updating user:", user);
         await user.save()
         res.status(200).send({
@@ -676,7 +461,6 @@ export const updateProfileController = async(req, res) =>{
     }
 }
 
-// update user password
 export const updatePasswordController = async (req, res) =>{
     try {
       const user = await userModel.findById(req.user._id)
@@ -687,7 +471,6 @@ export const updatePasswordController = async (req, res) =>{
         });
     }
       const {oldPassword, newPassword} = req.body
-      //validation
       if(!oldPassword || !newPassword){
         return res.status(500).send({
           success: false,
@@ -695,7 +478,6 @@ export const updatePasswordController = async (req, res) =>{
         })
       }
       const isMatch = await user.comparePassword(oldPassword)
-      //validation
       if(!isMatch){
         return res.status(400).send({
           success: false,
@@ -718,7 +500,6 @@ export const updatePasswordController = async (req, res) =>{
     }
 }
 
-//Update user profile
 export const updateProfilePic = async(req, res) => {
     try {
       console.log('Uploaded file:', req.file);
@@ -798,8 +579,8 @@ export const searchUsers = async (req, res) => {
   try {
     const filteredUsers = await User.find({
       $or: [
-        { name: { $regex: query, $options: 'i' } },   // Search by name (case-insensitive)
-        { id: query }                                // Search by ID
+        { name: { $regex: query, $options: 'i' } },   
+        { id: query }                           
       ]
     });
     res.status(200).json(filteredUsers);

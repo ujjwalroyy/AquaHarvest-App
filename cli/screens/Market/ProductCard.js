@@ -15,15 +15,16 @@ const ProductsCard = ({ p }) => {
   };
 
   const handleBuy = () => {
-    alert("Coming soon...");
+    alert("Coming Soon", "This feature is under development.");
   };
 
   return (
-    <View style={styles.card}>
+    <TouchableOpacity onPress={handleMoreButton} style={styles.card}>
       <Image style={styles.cardImage} source={{ uri: p?.images[0]?.url }} />
       <Text style={styles.cardTitle}>{p?.name}</Text>
+      <Text style={styles.cardTitle}>₹{p?.price}/kg </Text>
       <Text style={styles.cardDesc}>
-        {p?.description.substring(0, 30)}... more
+        {p?.description.substring(0, 40)}... see more
       </Text>
       <View style={styles.btnContainer}>
         <TouchableOpacity
@@ -39,7 +40,7 @@ const ProductsCard = ({ p }) => {
           <Text style={styles.btnText}>Buy</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 

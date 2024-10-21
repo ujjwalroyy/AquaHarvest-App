@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import axios from 'axios';
+import { Ionicons } from "@expo/vector-icons";
 
 export default function PondTest({ navigation, route }) {
   const { pondId } = route.params;
@@ -29,7 +30,7 @@ export default function PondTest({ navigation, route }) {
   const [loading, setLoading] = useState(false);
   const [temperatureInCelsius, setTemperatureInCelsius] = useState('');
 
-  const handleSubmitSampling = async () => {
+  const handleSubmitTesting = async () => {
     if (!pH || !temperature || !DO || !TDS || !turbidity || !plankton) {
       Alert.alert("Validation Error", "Please fill in all required fields in the Sampling section.");
       return;
@@ -47,6 +48,8 @@ export default function PondTest({ navigation, route }) {
       TDS,
       turbidity,
       plankton,
+      avgLength,
+      avgWeight,
     };
 
     try {
@@ -57,31 +60,6 @@ export default function PondTest({ navigation, route }) {
     } catch (error) {
       setLoading(false);
       Alert.alert('Error', 'Failed to save sampling data');
-    }
-  };
-
-  const handleSubmitTesting = async () => {
-    if (!avgLength || !avgWeight) {
-      Alert.alert("Validation Error", "Please fill in all required fields in the Testing section.");
-      return;
-    }
-
-    setLoading(true);
-
-    const testData = {
-      pondId,
-      avgLength,
-      avgWeight,
-    };
-
-    try {
-      const response = await axios.post('http://192.168.43.60:5050/api/v1/pond-test', testData);
-      setLoading(false);
-      Alert.alert('Success', 'Testing data saved successfully');
-      navigation.navigate("PondReport", response.data.newPondTest);
-    } catch (error) {
-      setLoading(false);
-      Alert.alert('Error', 'Failed to save testing data');
     }
   };
 
@@ -120,11 +98,14 @@ export default function PondTest({ navigation, route }) {
   };
 
   return (
+    
     <View style={styles.container}>
+    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backArrow}>
+      <Ionicons name="arrow-back" size={24} color="#000" />
+      </TouchableOpacity>
       <ScrollView contentContainerStyle={styles.scrollView}>
         <Text style={styles.title}>Conduct a Test</Text>
 
-        {/* Sampling Section */}
         <Text style={styles.sectionTitle}>Sampling</Text>
 
         <Text style={styles.label}>Water Quality</Text>
@@ -228,12 +209,8 @@ export default function PondTest({ navigation, route }) {
           keyboardType="numeric"
         />
 
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmitSampling}>
-          <Text style={styles.submitButtonText}>Generate Sampling Report</Text>
-        </TouchableOpacity>
-
         {/* Testing Section */}
-        <Text style={styles.sectionTitle}>Testing</Text>
+        <Text style={styles.sectionTitle}>Sampling</Text>
 
         <TextInput
           style={styles.textInput}
@@ -270,15 +247,34 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
+    fontWeight: 'bold',
+    backgroundColor: '#37AFE1',
+    marginBottom: 16,
+    marginTop: 16,
+    textAlign: 'center',
+    paddingVertical: 12,
+    color: '#fff',
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
     marginTop: 20,
     marginBottom: 10,
+  },
+  backArrow:{
+    height:32,
+    width:48,
+    backgroundColor: '#FFFECB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    marginTop: 14,
+    paddingBottom: 1,
+    paddingHorizontal: 2,
+    borderRadius: 3,
+    alignItems:'center',
+    justifyContent:'center',
+    borderRadius: 3,
   },
   label: {
     fontSize: 16,
@@ -308,7 +304,7 @@ const styles = StyleSheet.create({
   unit: {
     flex: 1,
     padding: 10,
-    backgroundColor: "#eee",
+    backgroundColor: "#37AFE1",
     borderRadius: 4,
     marginHorizontal: 5,
     alignItems: "center",
@@ -316,7 +312,7 @@ const styles = StyleSheet.create({
   activeUnit: {
     flex: 1,
     padding: 10,
-    backgroundColor: "#007BFF",
+    backgroundColor: "#37AFE1",
     borderRadius: 4,
     marginHorizontal: 5,
     alignItems: "center",
@@ -326,7 +322,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   submitButton: {
-    backgroundColor: "#007BFF",
+    backgroundColor: "#37AFE1",
     padding: 15,
     borderRadius: 4,
     marginVertical: 10,

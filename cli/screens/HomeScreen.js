@@ -76,7 +76,7 @@ export default function HomeScreen(props) {
   useEffect(() => {
     if (userData) {
       setName(userData.name || "");
-      setProfilePic(userData.profilePic || "");
+      setProfilePic(userData.profilePic || { uri: userData.profilePic.url } || "");
     }
   }, [userData]);
 
@@ -89,7 +89,7 @@ export default function HomeScreen(props) {
         Toast.show({
           type: "success",
           text1: `Welcome ${displayName}`,
-          text2: "Hii Buddy",
+          text2: "Your farm, always with you.",
           visibilityTime: 5000,
         });
       }
@@ -225,7 +225,7 @@ export default function HomeScreen(props) {
         </View>
 
         <Image
-          source={require("../assets/images/cover.jpg")} 
+          source={require("../assets/poster/poster2.jpeg")} 
           style={styles.fishImage}
         />
         
@@ -253,7 +253,7 @@ export default function HomeScreen(props) {
             style={styles.navButton}
             onPress={() => navigation.navigate("PondHelth")}
           >
-            <Text style={styles.navButtonText}>Dashboard</Text>
+            <Text style={styles.navButtonText}>DASHBOARD</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.navButton}
@@ -262,9 +262,7 @@ export default function HomeScreen(props) {
             <Text style={styles.navButtonText}>INVENTORY</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.navButton} 
-          onPress={() =>
-            Alert.alert("Coming Soon", "This feature is under development.")
-          } >
+          onPress={() => navigation.navigate("Gallary")} >
             <Text style={styles.navButtonText}>GALLERY</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -317,8 +315,8 @@ export default function HomeScreen(props) {
               onPress={() => navigation.navigate("PondHelth")}
               >Dashboard</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.sidebarButton}>
-              <Text style={styles.sidebarButtonText}>About Us</Text>
+            <TouchableOpacity style={styles.sidebarButton} onPress={() => navigation.navigate("AboutUs")}>
+              <Text style={styles.sidebarButtonText} >About Us</Text>
             </TouchableOpacity>
             <View style={styles.sidebarFooter}>
               <TouchableOpacity
@@ -408,7 +406,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   navButtonText: {
-    color: "#1E88E5",
+    color: "#37AFE1",
     fontSize: 20,
     fontWeight: "bold",
   },
@@ -480,7 +478,7 @@ const styles = StyleSheet.create({
   },
   sidebarButtonText: {
     fontSize: 18,
-    color: "#1E88E5",
+    color: "#37AFE1",
   },
   sidebarFooter: {
     flex: 1,

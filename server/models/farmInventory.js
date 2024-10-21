@@ -8,17 +8,27 @@ const farmInventorySchema = new mongoose.Schema({
   quantity: {
     type: Number,
     required: true,
+    min: 0, 
   },
   cost: {
     type: Number,
     required: true,
+    min: 0,  
   },
   type: {
     type: String,
     enum: ['Income', 'Expense'],
     required: true,
   },
-  profitOrLoss: Number
+  userId: {  
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'User', 
+  },
+  profitOrLoss: {
+    type: Number,
+    default: 0,
+  }
 });
 
 export const farmInventoryModel = mongoose.model("FarmInventory", farmInventorySchema);

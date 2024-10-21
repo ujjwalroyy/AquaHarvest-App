@@ -21,14 +21,12 @@ const userSchema = new mongoose.Schema(
     
     country: {
       type: String,
-      // required: [true, "country name is required"],
     },
     state:{
       type:String,
     },
     city: {
       type: String,
-      // required: [true, "city name is required"],
     },
     phone: {
       type: String,
@@ -70,18 +68,15 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// hashing password
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 10);
 });
 
-// compare password during login
 userSchema.methods.comparePassword = async function (plainPassword) {
   return await bcrypt.compare(plainPassword, this.password);
 };
 
-// JWT Token
 userSchema.methods.generateToken = function () {
   return JWT.sign({ _id: this._id }, process.env.JWT_SECRET, {
     expiresIn: "7d",

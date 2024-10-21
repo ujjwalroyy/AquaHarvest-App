@@ -12,11 +12,11 @@ const pondSchema = new mongoose.Schema(
             required: [true, "Pond name is required"]
         },
         pondArea: {
-            type: String, // Corrected to String to handle units
+            type: String, 
             required: [true, "Pond area is required"]
         },
         pondDepth: {
-            type: String, // Corrected to String to handle units
+            type: String, 
             required: [true, "Pond depth is required"]
         },
         cultureSystem: {

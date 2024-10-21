@@ -73,5 +73,3 @@ export const paymentVerification = async (req, res, next) => {
     }
 };
 
-
-//7:17

@@ -71,7 +71,6 @@ const SignupScreen = () => {
       return;
     }
 
-    // Perform signup logic here, e.g., API call
 
     Alert.alert('Success', 'Successfully signed up!');
   };
@@ -85,7 +84,6 @@ const SignupScreen = () => {
   };
 
   const handleOtpChange = (text) => {
-    // Limit OTP input to 6 digits
     if (/^\d{0,6}$/.test(text)) {
       setOtp(text);
     }
@@ -98,7 +96,7 @@ const SignupScreen = () => {
     }
     setIsOtpVerified(true);
     setIsModalVisible(false);
-    validateForm(); // Revalidate the form after OTP verification
+    validateForm(); 
   };
 
   return (
@@ -234,7 +232,6 @@ const SignupScreen = () => {
                 </TouchableOpacity>
               </View>
 
-              {/* OTP Verification Status */}
               {isOtpVerified && (
                 <View style={styles.otpStatusContainer}>
                   <FontAwesome name="check-circle" size={24} color="green" />
@@ -243,7 +240,6 @@ const SignupScreen = () => {
               )}
             </View>
 
-            {/* OTP Verification Modal */}
             <Modal
               transparent={true}
               visible={isModalVisible}

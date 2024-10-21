@@ -8,21 +8,17 @@ import cloudinary from "cloudinary";
 import session from "express-session";
 import passport from './config/auth.js';
 import Razorpay from 'razorpay'
-// import './config/auth.js';
 
 dotenv.config();
 
-//database
 connectDB();
 
-//cloudinary
 cloudinary.v2.config({
   cloud_name: process.env.CLOUDINARY_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_SECRET,
 });
 
-//rest object
 const app = express();
 
 app.use(morgan("dev"));
@@ -46,7 +42,6 @@ app.use(
   app.use(passport.initialize());
   app.use(passport.session());
 
-//routes
 import test1 from "./routes/test.js";
 import authRoute from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoute.js";
@@ -74,14 +69,6 @@ app.use("/api/v1",pondTestRoutes)
 app.use("/api/v3/admin", adminRoutes)
 app.use("/api/v1/inventory", farmInventoryRoutes)
 
-// app.get("/", (req, res) => {
-//   return res.status(200).send("<h1> Welcome to server<h1/>");
-// }); //root
-
-// app.use((err, req, res, next) => {
-//     console.error(err.stack);
-//     res.status(500).send('Something broke!');
-//   });
 
 export const instance = new Razorpay({
   key_id: process.env.RAZORPAY_API_KEY,
@@ -90,7 +77,6 @@ export const instance = new Razorpay({
 
 const PORT = process.env.PORT || 5050;
 
-//listen
 app.listen(PORT, () => {
   console.log(
     `Server Running on PORT ${process.env.PORT} on ${process.env.NODE_ENV} mode`

@@ -8,6 +8,7 @@ export const createIncome = async (req, res) => {
         const { pondId, productName, cost, quantity, remark, date } = req.body;
 
         const newIncome = await incomeModel.create({
+            userId: req.user.id, 
             pondId,
             productName,
             cost,
@@ -15,6 +16,7 @@ export const createIncome = async (req, res) => {
             remark,
             date
         });
+        
 
         res.status(201).json({ message: 'Income record created successfully', data: newIncome });
     } catch (error) {
@@ -44,28 +46,31 @@ export const getIncomeByPond = async (req, res) => {
 
 
 export const updateIncome = async (req, res) => {
+    console.log('Update Income Request:', req.params.id, req.body); 
     try {
-        const { pondId } = req.params;
+        const { id } = req.params; 
         const updateData = req.body;
-        
-        console.log('Updating income with ID:', pondId);
+
+        console.log('Updating income with ID:', id);
         console.log('Update data:', updateData);
 
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: 'Invalid ID format' });
+        }
+
         const updatedIncome = await incomeModel.findByIdAndUpdate(
-            pondId,
+            id, 
             updateData,
-            { new: true, runValidators: true }
+            { new: true, runValidators: true } 
         );
 
         if (!updatedIncome) {
-            console.log('Income record not found');
-            return res.status(404).json({ message: 'Income record not found' });
+            return res.status(404).json({ message: 'Income record not found' }); 
         }
-
         console.log('Income record updated successfully:', updatedIncome);
         res.status(200).json({ message: 'Income record updated successfully', data: updatedIncome });
     } catch (error) {
-        console.error('Error updating income record:', error);
+        console.error('Error updating income record:', error); 
         res.status(500).json({ message: 'Error updating income record', error: error.message });
     }
 };
@@ -87,6 +92,7 @@ export const createExpense = async (req, res) => {
         const { pondId, productName, cost, quantity, remark, date } = req.body;
 
         const newExpense = await expenseModel.create({
+            userId: req.user.id,  
             pondId,
             productName,
             cost,
@@ -111,6 +117,8 @@ export const getAllExpenses = async (req, res) => {
     }
 };
 
+
+
 export const getExpenseByPond = async (req, res) => {
     try {
         const { pondId } = req.params;
@@ -120,21 +128,111 @@ export const getExpenseByPond = async (req, res) => {
         res.status(500).json({ message: 'Error fetching expense records', error: error.message });
     }
 };
+
 export const updateExpense = async (req, res) => {
     try {
         const updatedExpense = await expenseModel.findByIdAndUpdate(
             req.params.id,
             req.body,
-            { new: true, runValidators: true }
+            { new: true, runValidators: true } 
         );
         if (!updatedExpense) {
-            return res.status(404).json({ message: 'Expense record not found' });
+            return res.status(404).json({ message: 'Expense record not found' }); 
         }
         res.status(200).json({ message: 'Expense record updated successfully', data: updatedExpense });
     } catch (error) {
+        console.error('Error updating expense record:', error); 
         res.status(500).json({ message: 'Error updating expense record', error: error.message });
     }
 };
+
+export const calculateTotalIncome = async (req, res) => {
+    try {
+        const userId = req.user.id;  
+        console.log('User ID:', userId); 
+
+        const ponds = await pondModel.find({ userId });
+        if (!ponds || ponds.length === 0) {
+            return res.status(200).json({ totalIncome: 0 });
+        }
+
+        const incomeRecords = await incomeModel.find({
+            userId, 
+            pondId: { $in: ponds.map(pond => pond._id) }
+        });
+
+        const totalIncome = incomeRecords.reduce((sum, record) => sum + (record.cost || 0), 0);
+
+        console.log('Total Income:', totalIncome); 
+        res.status(200).json({ totalIncome });
+    } catch (error) {
+        console.error('Error calculating total income:', error);
+        res.status(500).json({ message: 'Failed to calculate total income', error: error.message });
+    }
+};
+
+export const calculateTotalExpenses = async (req, res) => {
+    try {
+        const userId = req.user.id; 
+        console.log('User ID:', userId); 
+
+        const ponds = await pondModel.find({ userId });
+        if (!ponds || ponds.length === 0) {
+            return res.status(200).json({ totalExpenses: 0 });
+        }
+
+        const expenseRecords = await expenseModel.find({
+            userId,  
+            pondId: { $in: ponds.map(pond => pond._id) }
+        });
+
+        const totalExpenses = expenseRecords.reduce((sum, record) => sum + (record.cost || 0), 0);
+
+        console.log('Total Expenses:', totalExpenses); 
+        res.status(200).json({ totalExpenses });
+    } catch (error) {
+        console.error('Error calculating total expenses:', error);
+        res.status(500).json({ message: 'Failed to calculate total expenses', error: error.message });
+    }
+};
+
+export const calculateProfitOrLossUser = async (req, res) => {
+    try {
+        const userId = req.user.id;  
+        console.log('User ID:', userId); 
+
+        const ponds = await pondModel.find({ userId });
+        if (!ponds || ponds.length === 0) {
+            return res.status(200).json({ totalIncome: 0, totalExpenses: 0, profitOrLoss: 0 });
+        }
+
+        const pondIds = ponds.map(pond => pond._id);
+
+        const incomeRecords = await incomeModel.find({
+            userId,  
+            pondId: { $in: pondIds }
+        });
+
+        const expenseRecords = await expenseModel.find({
+            userId,  
+            pondId: { $in: pondIds }
+        });
+
+        const totalIncome = incomeRecords.reduce((sum, record) => sum + (record.cost || 0), 0);
+        const totalExpenses = expenseRecords.reduce((sum, record) => sum + (record.cost || 0), 0);
+        const profitOrLoss = totalIncome - totalExpenses;
+
+        console.log('Total Income:', totalIncome); 
+        console.log('Total Expenses:', totalExpenses);
+        console.log('Profit or Loss:', profitOrLoss); 
+
+        res.status(200).json({ totalIncome, totalExpenses, profitOrLoss });
+    } catch (error) {
+        console.error('Error calculating profit or loss:', error);
+        res.status(500).json({ message: 'Failed to calculate profit or loss', error: error.message });
+    }
+};
+
 
 export const deleteExpense = async (req, res) => {
     try {
@@ -192,34 +290,27 @@ export const calculateProfitOrLoss = async (req, res) => {
 
 export const calculateFinancials = async (req, res) => {
     try {
-        const userId = req.user.id; // Assuming user ID is set in request
+        const userId = req.user.id; 
 
-        // Fetch all ponds for the user
         const ponds = await pondModel.find({ userId });
 
         if (!ponds || ponds.length === 0) {
             return res.status(200).json({ totalIncome: 0, totalExpenses: 0, profitOrLoss: 0 });
         }
 
-        // Fetch incomes and expenses for all ponds
         const incomeRecords = await incomeModel.find({ pondId: { $in: ponds.map(pond => pond._id) } });
         const expenseRecords = await expenseModel.find({ pondId: { $in: ponds.map(pond => pond._id) } });
 
-        // Calculate total income
         const totalIncome = incomeRecords.reduce((sum, record) => sum + (record.cost || 0), 0);
 
-        // Calculate total expenses
         const totalExpenses = expenseRecords.reduce((sum, record) => sum + (record.cost || 0), 0);
 
-        // Calculate profit or loss
         const profitOrLoss = totalIncome - totalExpenses;
 
-        // Log the calculated values
         console.log('Total Income:', totalIncome);
         console.log('Total Expenses:', totalExpenses);
         console.log('Profit or Loss:', profitOrLoss);
 
-        // Send response
         res.status(200).json({ totalIncome, totalExpenses, profitOrLoss });
     } catch (error) {
         console.error('Error calculating financials:', error);

@@ -1,105 +1,130 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { View, Text, TextInput, Button, TouchableOpacity, FlatList, StyleSheet, ScrollView, Alert } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { Picker } from '@react-native-picker/picker';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useEffect, useState, useMemo, useCallback } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  TouchableOpacity,
+  FlatList,
+  StyleSheet,
+  ScrollView,
+  Alert,
+} from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Picker } from "@react-native-picker/picker";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Ionicons } from "@expo/vector-icons";
 
 const PondInventory = ({ navigation, route }) => {
   const { pondId, pondName } = route.params;
   const [records, setRecords] = useState({ expenses: [], income: [] });
   const [formState, setFormState] = useState({
-    productName: '',
-    quantity: '',
-    quantityUnit: 'kg',
-    cost: '',
-    remark: '',
+    productName: "",
+    quantity: "",
+    quantityUnit: "kg",
+    cost: "",
+    remark: "",
     date: new Date(),
     editingId: null,
   });
   const [isExpense, setIsExpense] = useState(true);
-  const [token, setToken] = useState('');
+  const [token, setToken] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const apiUrl = "http://192.168.43.60:5050/api/v1/expense-income";
 
-  // Fetch token and records on load
   useEffect(() => {
     const getTokenAndFetchRecords = async () => {
       try {
-        const storedToken = await AsyncStorage.getItem('token');
+        const storedToken = await AsyncStorage.getItem("token");
         if (storedToken) {
           setToken(storedToken);
           fetchRecords(storedToken);
         }
       } catch (error) {
-        console.error('Failed to retrieve token:', error);
+        console.error("Failed to retrieve token:", error);
       }
     };
     getTokenAndFetchRecords();
-  }, []);
+  }, [isExpense]);
 
   const fetchRecords = async (authToken) => {
     setLoading(true);
     try {
-      const endpoint = isExpense ? `/expense/pond/${pondId}` : `/income/pond/${pondId}`;
+      const endpoint = isExpense
+        ? `/expense/pond/${pondId}`
+        : `/income/pond/${pondId}`;
       const response = await axios.get(`${apiUrl}${endpoint}`, {
         headers: {
-          Authorization: `Bearer ${authToken}`
-        }
+          Authorization: `Bearer ${authToken}`,
+        },
       });
-      setRecords((prev) => ({ ...prev, [isExpense ? 'expenses' : 'income']: response.data }));
+      setRecords((prev) => ({
+        ...prev,
+        [isExpense ? "expenses" : "income"]: response.data,
+      }));
       setLoading(false);
     } catch (error) {
       setLoading(false);
-      setError('Failed to fetch records');
-      console.error('Failed to fetch records:', error);
+      setError("Failed to fetch records");
+      console.error("Failed to fetch records:", error);
     }
   };
 
   const addOrUpdateRecord = async () => {
-    const record = { pondId, ...formState, date: formState.date.toDateString() };
+    const record = {
+      pondId,
+      ...formState,
+      date: formState.date.toDateString(),
+    };
 
     try {
       setLoading(true);
-      const endpoint = formState.editingId ? 
-        (isExpense ? `/expense/${formState.editingId}` : `/income/${formState.editingId}`) :
-        (isExpense ? '/expense' : '/income');
+      const endpoint = formState.editingId
+        ? isExpense
+          ? `/${formState.editingId}`
+          : `/${formState.editingId}`
+        : isExpense
+          ? "/expense"
+          : "/income";
 
       const method = formState.editingId ? axios.put : axios.post;
       await method(`${apiUrl}${endpoint}`, record, {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       fetchRecords(token);
       clearForm();
     } catch (error) {
       setLoading(false);
-      setError('Failed to add or update record');
-      console.error('Failed to add or update record:', error);
+      setError("Failed to add or update record");
+      console.error("Failed to add or update record:", error);
     }
   };
 
   const clearForm = () => {
     setFormState({
-      productName: '',
-      quantity: '',
-      quantityUnit: 'kg',
-      cost: '',
-      remark: '',
+      productName: "",
+      quantity: "",
+      quantityUnit: "kg",
+      cost: "",
+      remark: "",
       date: new Date(),
       editingId: null,
     });
   };
 
   const handleEditRecord = (id) => {
-    const record = isExpense ? records.expenses.find(item => item._id === id) : records.income.find(item => item._id === id);
+    const record = isExpense
+      ? records.expenses.find((item) => item._id === id)
+      : records.income.find((item) => item._id === id);
     if (record) {
-      const [qty, unit] = record.quantity.split(' ');
+      const [qty, unit] = record.quantity.split(" ");
       setFormState({
         productName: record.productName,
         quantity: qty,
@@ -113,11 +138,14 @@ const PondInventory = ({ navigation, route }) => {
   };
 
   const calculateTotal = (type) => {
-    return records[type].reduce((sum, item) => sum + parseFloat(item.cost || 0), 0);
+    return records[type].reduce(
+      (sum, item) => sum + parseFloat(item.cost || 0),
+      0
+    );
   };
 
   const profitOrLoss = useMemo(() => {
-    return calculateTotal('income') - calculateTotal('expenses');
+    return calculateTotal("income") - calculateTotal("expenses");
   }, [records]);
 
   const handleDateChange = (event, selectedDate) => {
@@ -129,15 +157,19 @@ const PondInventory = ({ navigation, route }) => {
 
   const renderRecord = useCallback(({ item, index }) => (
     <View style={styles.tableRow}>
-      <Text style={styles.tableCell}>{index + 1}</Text>
-      <Text style={styles.tableCell}>{item.productName}</Text>
-      <Text style={styles.tableCell}>{item.quantity}</Text>
-      <Text style={styles.tableCell}>{item.cost}</Text>
-      <Text style={styles.tableCell}>{item.remark}</Text>
-      <Text style={styles.tableCell}>{item.date}</Text>
-      <TouchableOpacity onPress={() => handleEditRecord(item._id)} style={styles.editButton}>
-        <Text style={styles.buttonText}>Edit</Text>
-      </TouchableOpacity>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <View style={styles.tableRowContent}>
+          <Text style={styles.tableCell}>{index + 1}</Text>
+          <Text style={styles.tableCell}>{item.productName}</Text>
+          <Text style={styles.tableCell}>{item.quantity}</Text>
+          <Text style={styles.tableCell}>{item.cost}</Text>
+          <Text style={styles.tableCell}>{item.remark}</Text>
+          <Text style={styles.tableCell}>{new Date(item.date).toLocaleDateString()}</Text>
+          <TouchableOpacity onPress={() => handleEditRecord(item._id)} style={styles.editButton}>
+            <Text style={styles.buttonText}>Edit</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </View>
   ), [records]);
 
@@ -146,21 +178,34 @@ const PondInventory = ({ navigation, route }) => {
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backArrow}>
-        <Text>← Back</Text>
+      <Ionicons name="arrow-back" size={24} color="#000" />
       </TouchableOpacity>
-  
-      {/* Fixed Title */}
+
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>Pond Inventory</Text>
+        <Text style={styles.title}>Pond Inventory - {pondName}</Text>
       </View>
-  
-      {/* Scrollable Content */}
+
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, isExpense ? styles.activeTab : styles.inactiveTab]}
+          onPress={() => setIsExpense(true)}
+        >
+          <Text style={styles.tabText}>Expenses</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, !isExpense ? styles.activeTab : styles.inactiveTab]}
+          onPress={() => setIsExpense(false)}
+        >
+          <Text style={styles.tabText}>Income</Text>
+        </TouchableOpacity>
+      </View>
+
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Text style={styles.sectionTitle}>{isExpense ? "Add Expense" : "Add Income"}</Text>
-  
+
         <View style={styles.formContainer}>
           <TextInput
-            placeholder="Product Name"
+            placeholder={isExpense ? "Expense Product Name" : "Income Product Name"}
             value={formState.productName}
             onChangeText={(text) => setFormState((prev) => ({ ...prev, productName: text }))}
             style={styles.input}
@@ -208,47 +253,47 @@ const PondInventory = ({ navigation, route }) => {
           )}
           <Button title={formState.editingId ? "Update" : "Submit"} onPress={addOrUpdateRecord} />
         </View>
-  
+
         {loading && <Text>Loading...</Text>}
         {error && <Text style={styles.errorText}>{error}</Text>}
+
   
-        <View style={styles.verticalDivider}>
-          <View style={styles.tableHeader}>
-            <Text style={styles.tableHeaderCell}>#</Text>
-            <Text style={styles.tableHeaderCell}>Product Name</Text>
-            <Text style={styles.tableHeaderCell}>Quantity</Text>
-            <Text style={styles.tableHeaderCell}>Cost</Text>
-            <Text style={styles.tableHeaderCell}>Remark</Text>
-            <Text style={styles.tableHeaderCell}>Date</Text>
-            <Text style={styles.tableHeaderCell}>Actions</Text>
-          </View>
-          <FlatList
-            data={isExpense ? records.expenses : records.income}
-            renderItem={renderRecord}
-            keyExtractor={(item, index) => index.toString()}
-          />
+
+<View>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <View>
+        <View style={styles.tableRowContent}>
+          <Text style={styles.tableHeaderText}>S.no</Text>
+          <Text style={styles.tableHeaderText}>Product</Text>
+          <Text style={styles.tableHeaderText}>Quantity</Text>
+          <Text style={styles.tableHeaderText}>Cost</Text>
+          <Text style={styles.tableHeaderText}>Remark</Text>
+          <Text style={styles.tableHeaderText}>Date</Text>
+          <Text style={styles.tableHeaderText}>Actions</Text>
         </View>
-  
-        <View style={styles.totalContainer}>
-          <Text style={styles.totalText}>Total Expense: ₹{calculateTotal('expenses').toFixed(2)}</Text>
-          <Text style={styles.totalText}>Total Income: ₹{calculateTotal('income').toFixed(2)}</Text>
-        </View>
-  
-        <View style={profitOrLossStyle}>
-          <Text style={styles.profitOrLossText}>Profit/Loss: ₹{profitOrLoss.toFixed(2)}</Text>
-        </View>
-  
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.expenseButton} onPress={() => setIsExpense(true)}>
-            <Text style={styles.buttonText}>Add Expense</Text>
-          </TouchableOpacity>
-          {/* <TouchableOpacity style={styles.passbookButton} onPress={() => navigation.navigate('PassbookInventory', { expenses: records.expenses, income: records.income })}>
-            <Text style={styles.buttonText}>Passbook</Text>
-          </TouchableOpacity> */}
-          <TouchableOpacity style={styles.incomeButton} onPress={() => setIsExpense(false)}>
-            <Text style={styles.buttonText}>Add Income</Text>
-          </TouchableOpacity>
-        </View>
+
+        <FlatList
+          data={isExpense ? records.expenses : records.income}
+          renderItem={renderRecord}  
+          keyExtractor={(item) => item._id}
+          contentContainerStyle={styles.recordsContainer}
+        />
+      </View>
+    </ScrollView>
+  </View>
+
+  <Text style={[styles.profitLossText, profitOrLossStyle]}>
+    {isExpense ? 
+        `Total Expenses: ₹${calculateTotal('expenses')}` : 
+        `Total Income: ₹${calculateTotal('income')}`
+    }
+</Text>
+<Text style={profitOrLossStyle}>
+    {profitOrLoss >= 0 ? 
+        `Profit: ₹${profitOrLoss}` : 
+        `Loss: ₹${Math.abs(profitOrLoss)}`
+    }
+</Text>
       </ScrollView>
     </View>
   );
@@ -257,142 +302,164 @@ const PondInventory = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#fff',
+    padding: 16,
   },
-  errorText: {
-    color: 'red',
-    textAlign: 'center',
-  },
-  titleContainer: {
-    padding: 20,
-    backgroundColor: '#f8f8f8', // Adjust as needed
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc', // Adjust as needed
+  backArrow: {
+   height:32,
+    width:48,
+    backgroundColor: '#FFFECB',
+    justifyContent: 'center',
     alignItems: 'center',
+    elevation: 5,
+    marginTop: 14,
+    paddingBottom: 1,
+    paddingHorizontal: 2,
+    borderRadius: 3,
+    alignItems:'center',
+    justifyContent:'center',
+    borderRadius: 3,
+  },
+ 
+  titleContainer: {
+    alignItems: 'center',
+    marginVertical: 10,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
+    backgroundColor: '#37AFE1',
+    marginBottom: 16,
+    marginTop: 16,
+    textAlign: 'center',
+    paddingVertical: 12,
+    paddingLeft:84,
+    paddingRight:84,
+    color: '#fff',
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginVertical: 10,
+  },
+  tab: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 10,
+  },
+  activeTab: {
+    backgroundColor: '#4CC9FE',
+  },
+  inactiveTab: {
+    backgroundColor: '#d0d0d0',
+  },
+  tabText: {
+    fontSize: 18,
+    color: '#fff',
   },
   scrollContainer: {
     paddingBottom: 20,
   },
   sectionTitle: {
-    fontSize: 18,
+   fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 16,
+    color: '#333',
+    marginVertical: 10,
     textAlign: 'center',
   },
-  backArrow: {
-    marginBottom: 8,
-  },
   formContainer: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   input: {
-    borderWidth: 1,
-    padding: 12,
-    marginVertical: 8,
-    borderRadius: 4,
+    height: 40,
     borderColor: '#ccc',
-    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    marginBottom: 10,
+    paddingHorizontal: 10,
   },
   quantityContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 8,
   },
   quantityInput: {
     flex: 1,
-    borderWidth: 1,
-    padding: 12,
-    borderRadius: 4,
     borderColor: '#ccc',
-    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    marginBottom: 10,
+    paddingHorizontal: 10,
+    height: 40,
   },
   picker: {
-    width: 100,
+    flex: 1,
+    height: 40,
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: '#dcdcdc',
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-  },
-  tableHeaderCell: {
-    flex: 1,
-    fontSize: 11,
-    textAlign: 'center',
-  },
-  tableRow: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
+    backgroundColor: '#f5f5f5',
+    paddingVertical: 10,
+    borderBottomWidth: 2,
     borderBottomColor: '#ccc',
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+    justifyContent: 'space-between',
+    paddingHorizontal: 5, 
   },
-  tableCell: {
-    flex: 1,
+  tableHeaderText: {
+    fontSize: 16,
+    fontWeight: 'bold',
     textAlign: 'center',
+    width: 120,  
+    paddingHorizontal: 5,
   },
-  buttonContainer: {
+  recordsContainer: {
+    paddingVertical: 10,
+  },
+ 
+  tableRow: {
+   backgroundColor: '#fff',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+    marginBottom: 10,
+  },
+  tableRowContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 16,
-    marginBottom:30,
+    alignItems: 'center',
   },
-  expenseButton: {
-    backgroundColor: '#f28f8f',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 4,
+  tableCell: {
+    fontSize: 16,
+    textAlign: 'center',
+    width: 120,  
+    paddingHorizontal: 5,
   },
-  passbookButton: {
-    backgroundColor: '#57c7c8',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 4,
-  },
-  incomeButton: {
-    backgroundColor: '#8bf2a8',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 4,
+  editButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    marginHorizontal: 5,
+    marginLeft:40,
   },
   buttonText: {
     color: '#fff',
-    fontWeight: 'bold',
-  },
-  totalContainer: {
-    marginVertical: 11,
-  },
-  totalText: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  profitLossText: {
+    fontSize: 18,
+    marginVertical: 10,
   },
   profit: {
-    backgroundColor: 'green',
-    padding: 16,
-    borderRadius: 4,
-    marginVertical: 16,
+    color: 'green',
   },
   loss: {
-    backgroundColor: 'red',
-    padding: 16,
-    borderRadius: 4,
-    marginVertical: 16,
+    color: 'red',
   },
-  profitOrLossText: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  errorText: {
+    color: 'red',
     textAlign: 'center',
-  },
-  editButton: {
-    backgroundColor: '#4caf50',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 4,
+    marginVertical: 10,
   },
 });
 
-export default PondInventory;
+export default PondInventory

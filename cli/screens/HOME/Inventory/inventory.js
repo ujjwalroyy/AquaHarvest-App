@@ -8,12 +8,17 @@ import {
   Modal,
   StyleSheet,
   ScrollView,
+  Alert,
 } from 'react-native';
 import axios from 'axios'
+import {Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Inventory = ({ navigation }) => {
   const [expenses, setExpenses] = useState([]);
+  const [pondsExpanses, setPondExpanses] = useState('');
   const [income, setIncome] = useState([]);
+  const [pondsIncome, setPondIncome] = useState('');
   const [productName, setProductName] = useState('');
   const [quantity, setQuantity] = useState('');
   const [cost, setCost] = useState('');
@@ -21,6 +26,46 @@ const Inventory = ({ navigation }) => {
   const [selectedRecord, setSelectedRecord] = useState(null); 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [showAllDetails, setShowAllDetails] = useState(false); 
+
+  const fetchRecords = async () => {
+    try {
+        const token = await AsyncStorage.getItem("token");
+        if (!token) {
+            console.error("No token found. Please log in again.");
+            return;
+        }
+
+        const inventoryResponse = await axios.get('http://192.168.43.60:5050/api/v1/inventory/get-all', {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        console.log('Fetched inventory records ------------------------>:', inventoryResponse.data);
+        const inventoryData = Array.isArray(inventoryResponse.data) ? inventoryResponse.data : [];
+
+        console.log('Inventory Data --------------------->:', inventoryData);
+        
+        setExpenses(inventoryData.filter(item => item.type === 'Expense'));
+        setIncome(inventoryData.filter(item => item.type === 'Income'));
+
+        const incomeResponse = await axios.get('http://192.168.43.60:5050/api/v1/expense-income/income/total', {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        console.log('Income Response ------------------>:', incomeResponse.data);
+        const totalIncome = incomeResponse.data.totalIncome || 0; // Default to 0 if not available
+        setPondIncome(totalIncome);
+        const expenseResponse = await axios.get('http://192.168.43.60:5050/api/v1/expense-income/expenses/total', {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        console.log('Expense Response -------------------->:', expenseResponse.data);
+        const totalExpenses = expenseResponse.data.totalExpenses || 0; // Default to 0 if not available
+        setPondExpanses(totalExpenses)
+    } catch (error) {
+        console.error('Error fetching records ----------------->:', error);
+        Alert.alert('Error', error.response ? error.response.data.message : 'No Data Found...');
+    }
+};
 
 
   const addTransaction = async () => {
@@ -32,21 +77,33 @@ const Inventory = ({ navigation }) => {
     };
   
     try {
-      if (selectedRecord) {
-        const response = await axios.put(`http://192.168.43.60:5050/api/v1/inventory/update/${selectedRecord._id}`, record); 
-        if (transactionType === 'Expense') {
-          setExpenses(expenses.map((item) => (item._id === selectedRecord._id ? response.data : item)));
-        } else {
-          setIncome(income.map((item) => (item._id === selectedRecord._id ? response.data : item)));
-        }
-      } else {
-        const response = await axios.post('http://192.168.43.60:5050/api/v1/inventory/create', record); 
-        if (transactionType === 'Expense') {
-          setExpenses([...expenses, response.data]);
-        } else {
-          setIncome([...income, response.data]);
-        }
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        console.error("No token found. Please log in again.");
+        return;
       }
+  
+      const config = {
+        headers: { Authorization: `Bearer ${token}` },
+      };
+  
+      if (selectedRecord) {
+        await axios.put(
+          `http://192.168.43.60:5050/api/v1/inventory/update/${selectedRecord._id}`,
+          record,
+          config
+        );
+      } else {
+        await axios.post(
+          'http://192.168.43.60:5050/api/v1/inventory/create',
+          record,
+          config
+        );
+      }
+  
+      await fetchRecords(); 
+  
+      console.log('Records fetched after transaction:', expenses, income);
     } catch (error) {
       console.error('Error adding/updating transaction:', error);
     }
@@ -54,23 +111,12 @@ const Inventory = ({ navigation }) => {
     resetInputs();
     setIsModalVisible(false);
   };
-
+  
   useEffect(() => {
-    const fetchRecords = async () => {
-      try {
-        const response = await axios.get('http://192.168.43.60:5050/api/v1/inventory/get-all');
-        console.log('Fetched records:', response.data); 
-        setExpenses(response.data.filter(item => item.type === 'Expense'));
-        setIncome(response.data.filter(item => item.type === 'Income'));
-      } catch (error) {
-        console.error('Error fetching records:', error);
-      }
-    };
     fetchRecords();
   }, []);
 
-  
-  
+
 
   const resetInputs = () => {
     setProductName('');
@@ -85,9 +131,12 @@ const Inventory = ({ navigation }) => {
   const calculateTotalIncome = () => {
     return income.reduce((sum, item) => sum + parseFloat(item.cost || 0), 0);
   };
+  const calculateTotalPondCalc = () => {
+    return pondsIncome - pondsExpanses;
+  }
 
   const calculateProfitOrLoss = () => {
-    return calculateTotalIncome() - calculateTotalExpense();
+    return calculateTotalIncome() - calculateTotalExpense() + calculateTotalPondCalc();
   };
 
   const profitOrLoss = calculateProfitOrLoss();
@@ -97,11 +146,13 @@ const Inventory = ({ navigation }) => {
 
   const renderRecord = ({ item, index }) => (
     <View style={styles.tableRow}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <View style={styles.tableRowContent}>
+      {/* Each item/column will have fixed width */}
       <Text style={styles.tableCell}>{index + 1}</Text>
       <Text style={styles.tableCell}>{item.productName}</Text>
       <Text style={styles.tableCell}>{item.quantity}</Text>
       <Text style={[styles.tableCell, { color: item.type === 'Income' ? 'green' : 'red' }]}>{item.cost}</Text>
-      <Text style={[styles.tableCell, { color: item.type === 'Income' ? 'green' : 'red' }]}>{item.type}</Text>
       <TouchableOpacity
         style={styles.editButton}
         onPress={() => {
@@ -113,8 +164,10 @@ const Inventory = ({ navigation }) => {
           setIsModalVisible(true);
         }}
       >
-        <Text style={styles.editButtonText}>Edit</Text>
+        <Text style={styles.buttonText}>Edit</Text>
       </TouchableOpacity>
+        </View>
+      </ScrollView>
     </View>
   );
 
@@ -122,6 +175,9 @@ const Inventory = ({ navigation }) => {
 
   return (
     <ScrollView style={styles.container}>
+    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backArrow}>
+      <Ionicons name="arrow-back" size={24} color="#000" />
+      </TouchableOpacity>
       <Text style={styles.title}>Farm Inventory</Text>
       
       <View style={styles.sectionContainer}>
@@ -139,6 +195,8 @@ const Inventory = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
+      <View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Income Details</Text>
         <View style={styles.tableHeader}>
@@ -153,8 +211,15 @@ const Inventory = ({ navigation }) => {
           data={income}
           renderItem={renderRecord}
           keyExtractor={(item, index) => index.toString()}
+          contentContainerStyle={styles.recordsContainer}
         />
       </View>
+      </ScrollView>
+       </View>
+
+
+<View>
+<ScrollView horizontal showsHorizontalScrollIndicator={false}>
 
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Expense Details</Text>
@@ -170,8 +235,11 @@ const Inventory = ({ navigation }) => {
           data={expenses}
           renderItem={renderRecord}
           keyExtractor={(item, index) => index.toString()}
+          contentContainerStyle={styles.recordsContainer}
         />
       </View>
+</ScrollView>
+  </View>
 
       <Modal visible={isModalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalContainer}>
@@ -248,11 +316,27 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#f4f4f4',
   },
+  backArrow:{
+    height:32,
+    width:48,
+    backgroundColor: '#FFFECB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    marginTop: 14,
+    paddingBottom: 1,
+    paddingHorizontal: 2,
+    borderRadius: 3,
+    alignItems:'center',
+    justifyContent:'center',
+    borderRadius: 3,
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    backgroundColor: '#57c7c8',
+    backgroundColor: '#37AFE1',
     marginBottom: 16,
+    marginTop: 16,
     textAlign: 'center',
     paddingVertical: 12,
     color: '#fff',
@@ -268,12 +352,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10, 
+    marginBottom: 10,
+    marginleft: 20,
   },
 
   dashboardLink: {
     fontSize: 16,
-    color: '#007bff',
+    color: '#37AFE1',
     marginTop: 10,
   },
   profitText: {
@@ -313,38 +398,53 @@ const styles = StyleSheet.create({
   },
   tableHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     backgroundColor: '#f0f0f0',
-    borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
   tableHeaderCell: {
-    flex: 1,
-    paddingLeft: 15,
-    paddingTop:8,
-    fontSize:8.5,
-    fontWeight:'bold'
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    width: 120,  
+    paddingHorizontal: 5,
+    paddingVertical:10,
+  },
+  tableRowContent:{
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  recordsContainer:{
+    paddingVertical: 10,
   },
   tableRow: {
-    flexDirection: 'row',
+    backgroundColor: '#fff',
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
+    marginBottom: 10,
   },
   tableCell: {
-    flex: 1,
-    padding: 10,
+    fontSize: 16,
+    textAlign: 'center',
+    width: 120, 
+    paddingHorizontal:5,
+    marginHorizontal:0,
   },
   editButton: {
-    backgroundColor: '#007bff',
-    paddingTop: 1,
-    paddingBottom: 1,
+    backgroundColor: '#4CAF50',
+    paddingVertical: 5,
     paddingHorizontal: 10,
-    borderRadius: 3,
-    alignItems:'center',
-    justifyContent:'center',
-    borderRadius: 3,
+    borderRadius: 5,
+    marginHorizontal: 5,
+    marginLeft:40,
   },
-  editButtonText: {
+  buttonText: {
     color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
     textAlign: 'center',
   },
   modalContainer: {
@@ -377,7 +477,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   submitButton: {
-    backgroundColor: 'blue',
+    backgroundColor: '#37AFE1',
     padding: 10,
     borderRadius: 5,
     flex: 1,
@@ -403,8 +503,8 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     backgroundColor: '#fff',
     borderRadius: 10,
-    borderWidth: 1, // Add border width
-    borderColor: '#ddd', // Border color
+    borderWidth: 1, 
+    borderColor: '#ddd', 
   },
   showMoreButton: {
     paddingVertical: 40,
@@ -412,7 +512,7 @@ const styles = StyleSheet.create({
    
   },
   showMoreText: {
-    color: '#007bff',
+    color: '#37AFE1',
     fontSize: 16,
   },
   buttonContainer: {

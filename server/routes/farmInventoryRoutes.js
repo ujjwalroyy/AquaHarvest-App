@@ -7,12 +7,14 @@ import {
     updateTransaction
 } from '../controllers/farmInvertoryController.js';
 
+import { isAuth } from '../middlewares/auth.js';
+
 const router = express.Router();
 
-router.post("/create", createTransaction);  // Use POST for creating records
-router.get("/get-all", getAllTransactions); // Use GET to retrieve records
-router.put('/update/:id', updateTransaction); // Use PUT to update records
-router.delete('/delete/:id', deleteTransaction); // Use DELETE to remove records
-router.put('/profit-or-loss', updateProfitOrLoss)
+router.post("/create", isAuth, createTransaction);  
+router.get("/get-all", isAuth, getAllTransactions); 
+router.put('/update/:id', isAuth, updateTransaction); 
+router.delete('/delete/:id', isAuth, deleteTransaction);
+router.put('/profit-or-loss', isAuth, updateProfitOrLoss)
 
 export default router;
