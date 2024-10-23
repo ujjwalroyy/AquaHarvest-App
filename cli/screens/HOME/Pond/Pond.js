@@ -9,6 +9,7 @@ import {
   Modal,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
 } from "react-native";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
@@ -51,11 +52,11 @@ export default function Pond({ navigation }) {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      updateTimers();
+      updateTimers();  
     }, 1000);
-
-    return () => clearInterval(interval);
-  }, [timers]);
+  
+    return () => clearInterval(interval);  
+  }, [timers]); 
 
   const fetchPonds = async () => {
     try {
@@ -79,22 +80,16 @@ export default function Pond({ navigation }) {
   const initializeTimers = async (pondsData) => {
     const storedTimers = await AsyncStorage.getItem("timers");
     const newTimers = storedTimers ? JSON.parse(storedTimers) : {};
-
+  
     pondsData.forEach((pond) => {
-      if (pond.lastTestDate) {
-        const lastTestTime = new Date(pond.lastTestDate).getTime();
-        const currentTime = Date.now();
-        const elapsedTime = currentTime - lastTestTime;
-        const remainingTime = 864000000 - elapsedTime;
-
-        if (remainingTime > 0) {
-          newTimers[pond._id] = remainingTime;
-        } else {
-          newTimers[pond._id] = 0;
-        }
-      }
+      const lastTestTime = new Date(pond.lastTestDate).getTime();
+      const currentTime = Date.now();
+      const elapsedTime = currentTime - lastTestTime;
+      const remainingTime = 864000000 - elapsedTime;
+  
+      newTimers[pond._id] = remainingTime > 0 ? remainingTime : 0;
     });
-
+  
     setTimers(newTimers);
     await AsyncStorage.setItem("timers", JSON.stringify(newTimers));
   };
@@ -102,16 +97,16 @@ export default function Pond({ navigation }) {
   const updateTimers = () => {
     setTimers((prevTimers) => {
       const updatedTimers = { ...prevTimers };
-
+  
       Object.keys(updatedTimers).forEach((pondId) => {
         if (updatedTimers[pondId] > 0) {
-          updatedTimers[pondId] -= 1000;
+          updatedTimers[pondId] -= 1000;  
         } else {
-          updatedTimers[pondId] = 0;
+          updatedTimers[pondId] = 0;  
         }
       });
-
-      AsyncStorage.setItem("timers", JSON.stringify(updatedTimers));
+  
+      AsyncStorage.setItem("timers", JSON.stringify(updatedTimers));  
       return updatedTimers;
     });
   };
@@ -266,10 +261,11 @@ export default function Pond({ navigation }) {
     setCultureSystem(pond.cultureSystem);
     if (
       ![
+        "Select Species",
         "IMC",
         "Magur",
         "Singhi",
-        "Panga",
+        "Pangas",
         "Amur Carp",
         "Calbasu",
         "Pacu",
@@ -361,6 +357,7 @@ export default function Pond({ navigation }) {
     setShowDatePicker(false);
     if (selectedDate) setLastTestDate(selectedDate);
   };
+  
 
   return (
     <View style={styles.container}>
@@ -400,7 +397,7 @@ export default function Pond({ navigation }) {
             <Text>Stocking Density: {pond.stockingDensity} fish/m²</Text>
             <Text>Feed Type: {pond.feedType}</Text>
             <Text>
-              Last Test Date: {new Date(pond.lastTestDate).toLocaleDateString()}
+              Created At: {new Date(pond.lastTestDate).toLocaleDateString()}
             </Text>
             {timers[pond._id] !== undefined && timers[pond._id] > 0 ? (
               <Text>Time Remaining: {formatTime(timers[pond._id])}</Text>
@@ -465,7 +462,7 @@ export default function Pond({ navigation }) {
         visible={isModalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalContainer}>
+        <KeyboardAvoidingView style={styles.modalContainer}>
           <ScrollView style={styles.modalContent}>
             <Text style={styles.modalTitle}>
               {isEditing ? "Edit Pond" : "Add New Pond"}
@@ -518,6 +515,7 @@ export default function Pond({ navigation }) {
               style={styles.picker}
               onValueChange={(itemValue) => setCultureSystem(itemValue)}
             >
+              <Picker.Item label="Type of Culture" value="" enabled={false} />
               <Picker.Item label="Extensive" value="Extensive" />
               <Picker.Item label="Semi-intensive" value="Semi-intensive" />
               <Picker.Item label="Intensive" value="Intensive" />
@@ -527,17 +525,14 @@ export default function Pond({ navigation }) {
               style={styles.picker}
               onValueChange={(itemValue) => setSpecies(itemValue)}
             >
-              <Picker.Item label="IMC" value="IMC" />
+              <Picker.Item label="Select Species" value="" enabled={false} />
+              <Picker.Item label="IMC (Rohu, Catla, Mrigal)" value="IMC" />
               <Picker.Item label="Magur" value="Magur" />
               <Picker.Item label="Singhi" value="Singhi" />
-              <Picker.Item label="Panga" value="Panga" />
+              <Picker.Item label="Pangas" value="Pangas" />
               <Picker.Item label="Amur Carp" value="Amur Carp" />
-              <Picker.Item label="Calbasu" value="Calbasu" />
               <Picker.Item label="Pacu" value="Pacu" />
-              <Picker.Item label="Silver Grass" value="Silver Grass" />
-              <Picker.Item label="Vannamei" value="Vannamei" />
-              <Picker.Item label="Rosen Bergi" value="Rosen Bergi" />
-              <Picker.Item label="Monoder" value="Monoder" />
+              <Picker.Item label="EMC" value="EMC" />
               <Picker.Item label="Other" value="Other" />
             </Picker>
 
@@ -602,7 +597,7 @@ export default function Pond({ navigation }) {
               <Text style={[styles.buttonText, { color: "#000" }]}>Cancel</Text>
             </TouchableOpacity>
           </ScrollView>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -698,10 +693,11 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    width: "80%",
+    width: "95%",
     backgroundColor: "#fff",
     borderRadius: 10,
-    padding: 20,
+    padding: 10,
+    margin:20,
   },
   modalTitle: {
     fontSize: 20,

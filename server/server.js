@@ -1,5 +1,5 @@
 import express from "express";
-import morgan from "morgan";
+// import morgan from "morgan";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
@@ -21,7 +21,7 @@ cloudinary.v2.config({
 
 const app = express();
 
-app.use(morgan("dev"));
+// app.use(morgan("dev"));
 
 app.use(express.json());
 

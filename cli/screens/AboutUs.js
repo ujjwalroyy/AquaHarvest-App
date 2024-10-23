@@ -142,13 +142,11 @@ const About = () => {
             style={styles.profileImage}
           />
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>Dr. Praffula Kumar Panda</Text>
-            <Text style={styles.profilePosition}>Dean SoET CUTM</Text>
+            <Text style={styles.profileName}>Dr. Prafulla Kumar Panda</Text>
+            <Text style={styles.profilePosition}>Dean, School of Engineering and Technology</Text>
             <Text style={styles.profileMessage}>
-              Department of Civil Engineering, Centurion University of
-              Technology and Management, Odisha Coordinator : DSML Research
-              Centre Centurion University of Technology and Management ISRO
-              Nodal coordinator
+              Centurion University of
+              Technology and Management, Odisha
             </Text>
           </View>
         </View>
@@ -157,10 +155,10 @@ const About = () => {
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>Dr. Sambid Swain</Text>
             <Text style={styles.profilePosition}>
-              Associate Dean School of fisheries (SOF){" "}
+              Associate Dean                        School of fisheries {" "}
             </Text>
             <Text style={styles.profileMessage}>
-              Department of Fisheries, Centurion University of Technology and
+              Centurion University of Technology and
               Management, Odisha
             </Text>
           </View>

@@ -99,14 +99,14 @@ export default function HomeScreen(props) {
   }, [userData]);
 
   const handleBackPress = () => {
-    Alert.alert("Exit App", "Are you sure you want to exit?", [
+    Alert.alert("Leave App", "Are you sure you want to Leave?", [
       {
         text: "Cancel",
         onPress: () => null,
         style: "cancel",
       },
       {
-        text: "Exit",
+        text: "Leave",
         onPress: () => BackHandler.exitApp(),
       },
     ]);
