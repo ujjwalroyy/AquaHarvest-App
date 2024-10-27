@@ -41,7 +41,7 @@ const RegisterPage = () => {
       const userData = { name, email, phone, password };
       console.log("Submitting data:", userData);
 
-      axios.post("http://192.168.43.60:5050/api/v1/user/register", userData)
+      axios.post("https://fram-khatak.onrender.com/api/v1/user/register", userData)
         .then(res => {
           if (res.data.success) {
             setOtpModalVisible(true); 
@@ -78,7 +78,7 @@ const RegisterPage = () => {
 
   const verifyOtp = async (phone, otp) => {
     try {
-      const response = await axios.post('http://192.168.43.60:5050/api/v1/user/register/verify', { phone, otp });
+      const response = await axios.post('https://fram-khatak.onrender.com/api/v1/user/register/verify', { phone, otp });
 
       if (response.data.success) {
         setOtpModalVisible(false); 

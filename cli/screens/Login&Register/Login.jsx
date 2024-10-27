@@ -50,7 +50,7 @@ function LoginPage() {
       const userData = { phone, password };
       console.log("Submitting data:", userData);
 
-      axios.post("http://192.168.43.60:5050/api/v1/user/signin", userData)
+      axios.post("https://fram-khatak.onrender.com/api/v1/user/signin", userData)
         .then(res => {
           console.log('data ' ,res.data);
           if (res.data.success) {
@@ -110,7 +110,7 @@ function LoginPage() {
   const handleSendOtp = async () => {
     if (phone.length === 13) {
       try {
-        const response = await axios.post('http://192.168.43.60:5050/api/v1/user/send-otp', {
+        const response = await axios.post('https://fram-khatak.onrender.com/api/v1/user/send-otp', {
           phone: phone,
         });
         Alert.alert('OTP sent successfully');
@@ -126,7 +126,7 @@ function LoginPage() {
 
   const handleGoogleLogin = async () => {
     try {
-      const backendUrl = 'http://192.168.43.60:5050/auth/google'; 
+      const backendUrl = 'https://fram-khatak.onrender.com/auth/google'; 
       await Linking.openURL(backendUrl);
     } catch (error) {
       console.error('Google login failed:', error);
@@ -141,7 +141,7 @@ function LoginPage() {
 
       if (code) {
         try {
-          const response = await axios.get(`http://192.168.43.60:5050/auth/google/callback`, {
+          const response = await axios.get(`https://fram-khatak.onrender.com/auth/google/callback`, {
             params: { code }
           });
           
@@ -190,7 +190,7 @@ function LoginPage() {
 
   async function verifyOtp(phone, otp) {
     try {
-      const response = await axios.post('http://192.168.43.60:5050/api/v1/user/verify-forgot-otp', {
+      const response = await axios.post('https://fram-khatak.onrender.com/api/v1/user/verify-forgot-otp', {
         phone,
         otp
       });

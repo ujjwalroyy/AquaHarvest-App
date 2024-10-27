@@ -44,7 +44,7 @@ export default function Pond() {
       const token = await AsyncStorage.getItem("token");
       if (token) {
         const response = await axios.get(
-          "http://192.168.43.60:5050/api/v1/pond/getPonds",
+          "https://fram-khatak.onrender.com/api/v1/pond/getPonds",
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (Array.isArray(response.data)) {
@@ -83,7 +83,7 @@ export default function Pond() {
         Alert.alert('Error', 'No token found. Please log in again.');
         return;
       }
-      const response = await axios.post('http://192.168.43.60:5050/api/v1/pond/create', newPond, {
+      const response = await axios.post('https://fram-khatak.onrender.com/api/v1/pond/create', newPond, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
@@ -117,7 +117,7 @@ export default function Pond() {
         return;
       }
       const response = await axios.put(
-        `http://192.168.43.60:5050/api/v1/pond/update/${selectedPond._id}`,
+        `https://fram-khatak.onrender.com/api/v1/pond/update/${selectedPond._id}`,
         updatedPond,
         {
           headers: {
@@ -143,7 +143,7 @@ export default function Pond() {
         Alert.alert('Error', 'No token found. Please log in again.');
         return;
       }
-      await axios.delete(`http://192.168.43.60:5050/api/v1/pond/delete/${pondId}`, {
+      await axios.delete(`https://fram-khatak.onrender.com/api/v1/pond/delete/${pondId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

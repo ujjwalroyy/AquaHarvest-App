@@ -1,36 +1,12 @@
 {
   "expo": {
-    "name": "fishy",
-    "slug": "fishy",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "package": "com.ujjwalroy68.fishy"
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
-    "plugins": [
-      "expo-font"
-    ],
     "extra": {
       "eas": {
-        "projectId": "5604b45e-088c-4567-8ba1-5eb4066ae6ff"
+        "projectId": "b50c72f7-1174-46ed-aa50-af22ef84683a"
       }
+    },
+    "android": {
+      "package": "com.ujjwalroy68.matsyajeevan"
     }
   }
 }

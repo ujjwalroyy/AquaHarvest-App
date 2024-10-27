@@ -24,7 +24,7 @@ const ProductDetails = ({ route }) => {
       try {
         console.log(`Fetching product details for ID: ${params._id}`);
         const response = await axios.get(
-          `http://192.168.43.60:5050/api/v1/product/${params._id}`
+          `https://fram-khatak.onrender.com/api/v1/product/${params._id}`
         );
         console.log("API response:", response.data);
         setPDetails(response.data.product);

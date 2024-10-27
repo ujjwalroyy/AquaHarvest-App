@@ -34,7 +34,7 @@ const PondInventory = ({ navigation, route }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const apiUrl = "http://192.168.43.60:5050/api/v1/expense-income";
+  const apiUrl = "https://fram-khatak.onrender.com/api/v1/expense-income";
 
   useEffect(() => {
     const getTokenAndFetchRecords = async () => {

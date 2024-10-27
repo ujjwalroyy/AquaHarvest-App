@@ -24,7 +24,7 @@ export default function PondReport({ navigation, route }) {
     const fetchPondTests = async () => {
       try {
         const response = await axios.get(
-          `http://192.168.43.60:5050/api/v1/pond-tests/${pondId}`
+          `https://fram-khatak.onrender.com/api/v1/pond-tests/${pondId}`
         );
         if (response.data) {
           setPondReports(response.data);
@@ -48,7 +48,7 @@ export default function PondReport({ navigation, route }) {
           onPress: async () => {
             try {
               await axios.delete(
-                `http://192.168.43.60:5050/api/v1/pond-test/${reportId}`
+                `https://fram-khatak.onrender.com/api/v1/pond-test/${reportId}`
               );
               setPondReports(
                 pondReports.filter((report) => report._id !== reportId)

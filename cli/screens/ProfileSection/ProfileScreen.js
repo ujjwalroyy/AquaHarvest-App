@@ -33,7 +33,7 @@ export default function ProfileScreen() {
 
       if (token) {
         const response = await axios.get(
-          'http://192.168.43.60:5050/api/v1/user/profile',
+          'https://fram-khatak.onrender.com/api/v1/user/profile',
           { headers: { Authorization: `Bearer ${token}` } }
         );
         console.log('Response data profile:', response.data);
@@ -101,7 +101,7 @@ export default function ProfileScreen() {
         }
       });
   
-      const response = await axios.put('http://192.168.43.60:5050/api/v1/user/profile-update', profileData, {
+      const response = await axios.put('https://fram-khatak.onrender.com/api/v1/user/profile-update', profileData, {
         headers: { Authorization: `Bearer ${token}` },
       });
   
@@ -158,7 +158,7 @@ export default function ProfileScreen() {
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found');
 
-      const response = await axios.put('http://192.168.43.60:5050/api/v1/user/profile-picture', formData, {
+      const response = await axios.put('https://fram-khatak.onrender.com/api/v1/user/profile-picture', formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data', 
@@ -187,7 +187,7 @@ export default function ProfileScreen() {
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found');
 
-      const response = await axios.put('http://192.168.43.60:5050/api/v1/user/update-password', passwordData, {
+      const response = await axios.put('https://fram-khatak.onrender.com/api/v1/user/update-password', passwordData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return response.data;

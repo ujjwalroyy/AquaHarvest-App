@@ -55,6 +55,7 @@ import paymentRoutes from './routes/paymentRoutes.js'
 import pondTestRoutes from './routes/pondTestRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
 import farmInventoryRoutes from './routes/farmInventoryRoutes.js'
+import gallaryRoutes from './routes/gallaryRoutes.js'
 app.use("/api/v1", test1);
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/product", productRoutes);
@@ -68,7 +69,7 @@ app.use("/api/v1/payment", paymentRoutes)
 app.use("/api/v1",pondTestRoutes)
 app.use("/api/v3/admin", adminRoutes)
 app.use("/api/v1/inventory", farmInventoryRoutes)
-
+app.use("/api/v1/gallary", gallaryRoutes)
 
 export const instance = new Razorpay({
   key_id: process.env.RAZORPAY_API_KEY,

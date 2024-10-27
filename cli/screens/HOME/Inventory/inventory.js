@@ -35,7 +35,7 @@ const Inventory = ({ navigation }) => {
             return;
         }
 
-        const inventoryResponse = await axios.get('http://192.168.43.60:5050/api/v1/inventory/get-all', {
+        const inventoryResponse = await axios.get('https://fram-khatak.onrender.com/api/v1/inventory/get-all', {
             headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -47,14 +47,14 @@ const Inventory = ({ navigation }) => {
         setExpenses(inventoryData.filter(item => item.type === 'Expense'));
         setIncome(inventoryData.filter(item => item.type === 'Income'));
 
-        const incomeResponse = await axios.get('http://192.168.43.60:5050/api/v1/expense-income/income/total', {
+        const incomeResponse = await axios.get('https://fram-khatak.onrender.com/api/v1/expense-income/income/total', {
             headers: { Authorization: `Bearer ${token}` },
         });
 
         console.log('Income Response ------------------>:', incomeResponse.data);
         const totalIncome = incomeResponse.data.totalIncome || 0; // Default to 0 if not available
         setPondIncome(totalIncome);
-        const expenseResponse = await axios.get('http://192.168.43.60:5050/api/v1/expense-income/expenses/total', {
+        const expenseResponse = await axios.get('https://fram-khatak.onrender.com/api/v1/expense-income/expenses/total', {
             headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -89,13 +89,13 @@ const Inventory = ({ navigation }) => {
   
       if (selectedRecord) {
         await axios.put(
-          `http://192.168.43.60:5050/api/v1/inventory/update/${selectedRecord._id}`,
+          `https://fram-khatak.onrender.com/api/v1/inventory/update/${selectedRecord._id}`,
           record,
           config
         );
       } else {
         await axios.post(
-          'http://192.168.43.60:5050/api/v1/inventory/create',
+          'https://fram-khatak.onrender.com/api/v1/inventory/create',
           record,
           config
         );

@@ -26,7 +26,7 @@ export default function PondHealth() {
         }
   
         const response = await axios.get(
-          'http://192.168.43.60:5050/api/v1/pond-test/get-all', 
+          'https://fram-khatak.onrender.com/api/v1/pond-test/get-all', 
           {
             headers: {
               Authorization: `Bearer ${token}`, 
@@ -61,7 +61,7 @@ export default function PondHealth() {
         }
 
         const response = await axios.get(
-          "http://192.168.43.60:5050/api/v1/pond/pondByUser",
+          "https://fram-khatak.onrender.com/api/v1/pond/pondByUser",
           {
             headers: { Authorization: `Bearer ${token}` } 
           }

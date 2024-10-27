@@ -40,7 +40,7 @@ export default function HomeScreen(props) {
 
       if (token) {
         const response = await axios.get(
-          "http://192.168.43.60:5050/api/v1/user/profile",
+          "https://fram-khatak.onrender.com/api/v1/user/profile",
           { headers: { Authorization: `Bearer ${token}` } }
         );
         console.log("Response data home:", response.data);
@@ -133,7 +133,7 @@ export default function HomeScreen(props) {
       }
 
       const response = await axios.post(
-        "http://192.168.43.60:5050/api/v1/user/logout",
+        "https://fram-khatak.onrender.com/api/v1/user/logout",
         {},
         {
           headers: {

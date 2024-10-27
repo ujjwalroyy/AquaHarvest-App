@@ -12,7 +12,7 @@ export const getPondDetails = async () => {
         return;
       }
       const response = await axios.get(
-        "http://192.168.43.60:5050/api/v1/expense-income/calculate",
+        "https://fram-khatak.onrender.com/api/v1/expense-income/calculate",
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return response.data;
@@ -30,7 +30,7 @@ const fetchPonds = async () => {
       return;
     }
     const response = await axios.get(
-      "http://192.168.43.60:5050/api/v1/pond/getPonds",
+      "https://fram-khatak.onrender.com/api/v1/pond/getPonds",
       { headers: { Authorization: `Bearer ${token}` } }
     );
     setPonds(response.data);
