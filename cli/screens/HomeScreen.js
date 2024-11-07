@@ -40,7 +40,7 @@ export default function HomeScreen(props) {
 
       if (token) {
         const response = await axios.get(
-          "https://fram-khatak.onrender.com/api/v1/user/profile",
+          "http://192.168.43.60:5050/api/v1/user/profile",
           { headers: { Authorization: `Bearer ${token}` } }
         );
         console.log("Response data home:", response.data);
@@ -133,7 +133,7 @@ export default function HomeScreen(props) {
       }
 
       const response = await axios.post(
-        "https://fram-khatak.onrender.com/api/v1/user/logout",
+        "http://192.168.43.60:5050/api/v1/user/logout",
         {},
         {
           headers: {
@@ -260,6 +260,10 @@ export default function HomeScreen(props) {
             onPress={() => navigation.navigate("Inventory")}
           >
             <Text style={styles.navButtonText}>INVENTORY</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navButton} 
+          onPress={() => navigation.navigate("AnalyzeFish")} >
+            <Text style={styles.navButtonText}>Analyze</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.navButton} 
           onPress={() => navigation.navigate("Gallary")} >

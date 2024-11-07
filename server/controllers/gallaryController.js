@@ -84,29 +84,91 @@ export const createGalleryItemController = async (req, res) => {
 };
 
 export const getAllGalleryItemsController = async (req, res) => {
-    try {
-      const galleryItems = await galleryModel.find();
-  
-      if (galleryItems.length === 0) {
-        return res.status(404).send({
-          success: false,
-          message: "No gallery items found.",
-        });
-      }
-  
-      res.status(200).send({
-        success: true,
-        message: "All gallery items fetched successfully",
-        totalItems: galleryItems.length,
-        galleryItems,
-      });
-    } catch (error) {
-      console.error('Error in getAllGalleryItemsController:', error);
-      res.status(500).send({
+  try {
+    const galleryItems = await galleryModel.find().lean();
+
+    const filteredItems = galleryItems.filter(item => item.images && item.images.length > 0);
+
+    if (filteredItems.length === 0) {
+      return res.status(404).send({
         success: false,
-        message: "Error in fetching gallery items",
-        error: error.message || error,
+        message: "No gallery items found with valid images.",
       });
     }
-  };
-  
+
+    res.status(200).send({
+      success: true,
+      message: "All gallery items with valid images fetched successfully",
+      totalItems: filteredItems.length,
+      galleryItems: filteredItems,
+    });
+  } catch (error) {
+    console.error('Error in getAllGalleryItemsController:', error);
+    res.status(500).send({
+      success: false,
+      message: "Error in fetching gallery items",
+      error: error.message || error,
+    });
+  }
+};
+
+export const editGalleryItemController = async (req, res) => {
+  const { id } = req.params;
+  const { name, description, images } = req.body;
+
+  try {
+    const updatedItem = await galleryModel.findByIdAndUpdate(
+      id,
+      { name, description, images },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedItem) {
+      return res.status(404).send({
+        success: false,
+        message: "Gallery item not found",
+      });
+    }
+
+    res.status(200).send({
+      success: true,
+      message: "Gallery item updated successfully",
+      galleryItem: updatedItem,
+    });
+  } catch (error) {
+    console.error('Error in editGalleryItemController:', error);
+    res.status(500).send({
+      success: false,
+      message: "Error updating gallery item",
+      error: error.message || error,
+    });
+  }
+};
+
+export const deleteGalleryItemController = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const deletedItem = await galleryModel.findByIdAndDelete(id);
+
+    if (!deletedItem) {
+      return res.status(404).send({
+        success: false,
+        message: "Gallery item not found",
+      });
+    }
+
+    res.status(200).send({
+      success: true,
+      message: "Gallery item deleted successfully",
+      galleryItem: deletedItem,
+    });
+  } catch (error) {
+    console.error('Error in deleteGalleryItemController:', error);
+    res.status(500).send({
+      success: false,
+      message: "Error deleting gallery item",
+      error: error.message || error,
+    });
+  }
+};

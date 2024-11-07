@@ -10,52 +10,73 @@ import {
   Modal,
   Pressable,
   Animated,
+  Alert,
 } from 'react-native';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
-const imageSize = width - 40; 
-
-const images = [
-  {
-    id: '1',
-    uri: 'https://via.placeholder.com/300x300.png',
-    name: 'Image 1',
-    description: 'This is a long description for Image 1. It contains a lot of details that might not fit in the usual view.',
-  },
-  {
-    id: '2',
-    uri: 'https://via.placeholder.com/300x300.png',
-    name: 'Image 2',
-    description: 'This is the description for Image 2.',
-  },
-  {
-    id: '3',
-    uri: 'https://via.placeholder.com/300x300.png',
-    name: 'Image 3',
-    description: 'This is the description for Image 3.',
-  },
-];
+const imageSize = width - 40;
 
 const Bubble = ({ style }) => <Animated.View style={[styles.bubble, style]} />;
 
 const GalleryItem = ({ image, onPress }) => {
+  const imageUrl = image.images?.[0]?.url || '';
+  const imageName = image.name || '';
+  const shortDescription = image.description?.split(" ").slice(0, 15).join(" ") + "...";
+
   return (
     <View style={styles.itemContainer}>
       <TouchableOpacity onPress={onPress}>
         <Image
           style={styles.image}
-          source={{ uri: image.uri }}
+          source={{ uri: imageUrl }}
           resizeMode="cover"
         />
       </TouchableOpacity>
-      <Text style={styles.imageName}>{image.name}</Text>
+      <Text style={styles.imageName}>{imageName}</Text>
+      <Text style={styles.imageDescription}>
+        {shortDescription}{" "}
+        <Text style={styles.seeMoreText} onPress={onPress}>See more</Text>
+      </Text>
     </View>
   );
 };
 
 const GalleryPage = () => {
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null); 
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imageData, setImageData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchImages = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        Alert.alert('Error', 'No token found. Please log in again.');
+        return;
+      }
+
+      const response = await axios.get(
+        "http://192.168.43.60:5050/api/v1/gallary/get-all",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      console.log('API Response:', response.data);
+
+      const images = Array.isArray(response.data.galleryItems) ? response.data.galleryItems : []; 
+      setImageData(images);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching gallery items:', error);
+      Alert.alert('Error', 'Failed to fetch gallery items data.');
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchImages();
+  }, []);
 
   const openModal = (image) => {
     setSelectedImage(image);
@@ -67,8 +88,8 @@ const GalleryPage = () => {
     setSelectedImage(null);
   };
 
-  const bubbleCount = 5; 
-  const bubbles = useRef([]); 
+  const bubbleCount = 5;
+  const bubbles = useRef([]);
 
   useEffect(() => {
     for (let i = 0; i < bubbleCount; i++) {
@@ -77,21 +98,21 @@ const GalleryPage = () => {
   }, []);
 
   const createBubble = (index) => {
-    const position = new Animated.Value(Dimensions.get('window').height + 50); 
-    bubbles.current[index] = position; 
+    const position = new Animated.Value(Dimensions.get('window').height + 50);
+    bubbles.current[index] = position;
 
     const animateBubble = () => {
-      position.setValue(Dimensions.get('window').height + 50); 
+      position.setValue(Dimensions.get('window').height + 50);
       Animated.timing(position, {
-        toValue: -50, 
-        duration: 5000, 
+        toValue: -50,
+        duration: 5000,
         useNativeDriver: false,
       }).start(() => {
-        animateBubble(); 
+        animateBubble();
       });
     };
 
-    animateBubble(); 
+    animateBubble();
   };
 
   return (
@@ -102,14 +123,14 @@ const GalleryPage = () => {
             key={index}
             style={{
               position: 'absolute',
-              left: Math.random() * (width - 30), 
+              left: Math.random() * (width - 30),
               bottom: 0,
               opacity: 0.6,
-              width: 30 + Math.random() * 20, 
+              width: 30 + Math.random() * 20,
               height: 30 + Math.random() * 20,
               borderRadius: 50,
-              backgroundColor: 'rgba(0, 150, 255, 0.3)', 
-              transform: [{ translateY: bubble }], 
+              backgroundColor: 'rgba(0, 150, 255, 0.3)',
+              transform: [{ translateY: bubble }],
             }}
           />
         ))}
@@ -117,18 +138,24 @@ const GalleryPage = () => {
 
       <Text style={styles.header}>Gallery</Text>
 
-      <FlatList
-        data={images}
-        renderItem={({ item }) => (
-          <GalleryItem image={item} onPress={() => openModal(item)} />
-        )}
-        keyExtractor={(item) => item.id}
-        numColumns={1} 
-        contentContainerStyle={styles.gallery}
-      />
+      {loading ? (
+        <Text style={styles.loadingText}>Loading...</Text>
+      ) : imageData.length === 0 ? (
+        <Text style={styles.noDataText}>No data available.</Text>
+      ) : (
+        <FlatList
+          data={imageData}
+          renderItem={({ item }) => (
+            <GalleryItem image={item} onPress={() => openModal(item)} />
+          )}
+          keyExtractor={(item) => item.images?.[0]?.public_id || item._id} 
+          numColumns={1}
+          contentContainerStyle={styles.gallery}
+        />
+      )}
 
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         visible={modalVisible}
         onRequestClose={closeModal}
@@ -138,8 +165,8 @@ const GalleryPage = () => {
             <>
               <Image
                 style={styles.modalImage}
-                source={{ uri: selectedImage.uri }}
-                resizeMode="cover"
+                source={{ uri: selectedImage.images?.[0]?.url }}
+                resizeMode="contain"
               />
               <Text style={styles.modalImageName}>{selectedImage.name}</Text>
               <Text style={styles.modalImageDescription}>
@@ -160,32 +187,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#B6E6FC',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   bubbleContainer: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    overflow: 'hidden',
-  },
-  bubble: {
-    backgroundColor: '#ffffff',
-  },
-  header: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginVertical: 20,
-    color: '#005f99', 
-  },
-  gallery: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    width: '100%',
+    height: '100%',
   },
   itemContainer: {
-    marginVertical: 10,
     alignItems: 'center',
+    marginBottom: 20,
   },
   image: {
     width: imageSize,
@@ -194,46 +206,64 @@ const styles = StyleSheet.create({
   },
   imageName: {
     marginTop: 10,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+  },
+  imageDescription: {
+    fontSize: 14,
+    color: '#555',
+    textAlign: 'center',
+  },
+  seeMoreText: {
+    color: '#1E90FF',
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginVertical: 20,
+  },
+  loadingText: {
+    fontSize: 18,
+    marginTop: 20,
+  },
+  noDataText: {
+    fontSize: 18,
+    marginTop: 20,
+    color: 'red',
   },
   modalContainer: {
     flex: 1,
     backgroundColor: '#B6E6FC',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
   },
   modalImage: {
-    width: '100%',
-    height: 300,
+    width: '90%',
+    height: '70%',
     borderRadius: 10,
   },
   modalImageName: {
-    marginTop: 10,
-    fontSize: 24,
+    color: '#000',
+    fontSize: 20,
     fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#005f99', 
+    marginVertical: 10,
   },
   modalImageDescription: {
-    marginTop: 10,
+    color: '#000',
     fontSize: 16,
-    color: '#666',
     textAlign: 'center',
+    paddingHorizontal: 20,
   },
   closeButton: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: '#005f99', 
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
     borderRadius: 5,
+    padding: 10,
+    marginTop: 10,
   },
   closeButtonText: {
-    color: 'white', 
-    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#000',
   },
 });
 
 export default GalleryPage;
-  

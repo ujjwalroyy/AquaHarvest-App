@@ -7,7 +7,6 @@ const tempUserSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: true,
     unique: true,
   },
   password: {
@@ -17,6 +16,7 @@ const tempUserSchema = new mongoose.Schema({
   
   phone: {
     type: String,
+    unique: true,
     required: true,
   },
   
@@ -26,8 +26,10 @@ const tempUserSchema = new mongoose.Schema({
   },
   otpExpires: {
     type: Date,
+    index: { expires: '5m' },
     required: true,
   },
+
 }, { timestamps: true });
 
 const TempUserModel = mongoose.model('TempUser', tempUserSchema);

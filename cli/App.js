@@ -23,6 +23,7 @@ import Dashboard from './screens/User/Dashboard.js'
 import PondHealth from "./screens/HOME/Pond/PondHelth.js";
 import AboutUs from "./screens/AboutUs.js"
 import Gallary from "./screens/HOME/Gallary/Gallary.js"
+import AnalyzeFish from "./screens/Fish/AnalyzeFish.js";
 
 const toastConfig = {
   success: (props) => (
@@ -92,6 +93,7 @@ const Continue = () => (
     <Stack.Screen name="ProductDetails" component={ProductDetails}/>
     <Stack.Screen name="AboutUs" component={AboutUs}/>
     <Stack.Screen name="Category" component={Categories}/>
+    <Stack.Screen name="AnalyzeFish" component={AnalyzeFish}/>
     <Stack.Screen name="LoginNav" component={LoginNav} />
   </Stack.Navigator>
 );

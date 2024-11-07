@@ -24,7 +24,7 @@ const Home = () => {
       }
 
       const response = await axios.get(
-        "https://fram-khatak.onrender.com/api/v1/product/get-all",
+        "http://192.168.43.60:5050/api/v1/product/get-all",
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

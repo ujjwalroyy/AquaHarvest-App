@@ -17,7 +17,7 @@ export default function PondHealth() {
   useEffect(() => {
     const fetchPondReports = async () => {
       try {
-        const response = await axios.get('https://fram-khatak.onrender.com/api/v1/pond-test/get-all');
+        const response = await axios.get('http://192.168.43.60:5050/api/v1/pond-test/get-all');
         setPondData(response.data);
         if (response.data.length > 0) {
           setSelectedPond(response.data[0].pondId);
@@ -39,7 +39,7 @@ export default function PondHealth() {
         return;
       }
       const response = await axios.get(
-        "https://fram-khatak.onrender.com/api/v1/pond/getPonds",
+        "http://192.168.43.60:5050/api/v1/pond/getPonds",
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setPonds(response.data);

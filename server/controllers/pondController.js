@@ -1,3 +1,4 @@
+import axios from 'axios';
 import Pond from '../models/pondModel.js'; 
 import dotenv from 'dotenv';
 import twilio from 'twilio';
@@ -119,7 +120,7 @@ export const updatePondTestDate = async (req, res) => {
     const phoneNumber = updatedPond.userId.phone;
     const pondName = updatedPond.name;
 
-    sendTestReminderSMS(phoneNumber, pondName)
+    scheduleTestReminderSMS(phoneNumber, pondName)
     .then(() => {
       console.log('SMS sent successfully');
     })
@@ -148,7 +149,7 @@ export const checkPondTimers = async (req, res) => {
 
     for (const pond of overduePonds) {
       if (pond.userId && pond.userId.phone) {
-        await sendTestReminderSMS(pond.userId.phone, pond.name);
+        await finalSendTestReminderSMS(pond.userId.phone, pond.name);
       }
     }
 
@@ -156,6 +157,21 @@ export const checkPondTimers = async (req, res) => {
   } catch (error) {
     console.error('Error checking pond timers:', error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const finalSendTestReminderSMS = async (phoneNumber, pondName) => {
+  try {
+    const username = process.env.SMS_API_USERNAME;
+    const password = process.env.SMS_API_PASSWORD;
+    const apiUrl = `http://web.smsgw.in/smsapi/httpapi.jsp?username=${username}&password=${password}&from=CENUNI&to=${phoneNumber}&text=Dear Candidate, Reminder... It's time to test the pond '${pondName}' Centurion University&coding=0&pe_id=1001349507132979670&template_id=1007969925263833257`;
+
+    const response = await axios.get(apiUrl);
+    console.log('SMS sent successfully:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Failed to send SMS:', error);
+    throw new Error('SMS sending failed');
   }
 };
 
@@ -174,6 +190,21 @@ export const sendTestReminderSMS = async (phoneNumber, pondName) => {
     throw new Error('SMS sending failed');
   }
 };
+
+export const scheduleTestReminderSMS = async (phoneNumber, pondName) => {
+  try {
+  const username = process.env.SMS_API_USERNAME; 
+  const password = process.env.SMS_API_PASSWORD;
+  const apiUrl = `http://web.smsgw.in/smsapi/httpapi.jsp?username=${username}&password=${password}&from=CENUNI&to=${phoneNumber}&text=Dear Candidate, Your test is scheduled for pond '${pondName}' Centurion University&coding=0&pe_id=1001349507132979670&template_id=1007222102798000923`;
+  const response = await axios.get(apiUrl);
+  console.log('SMS sent successfully:', response.data); 
+  return response.data;
+  } catch (error) {
+    console.error('Failed to send SMS:', error);
+    throw new Error('SMS sending failed');
+  }
+};
+
 
 export const getPondsByUser = async (req, res) => {
   try {

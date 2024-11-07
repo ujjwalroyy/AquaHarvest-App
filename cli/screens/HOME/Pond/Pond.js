@@ -66,7 +66,7 @@ export default function Pond({ navigation }) {
         return;
       }
       const response = await axios.get(
-        "https://fram-khatak.onrender.com/api/v1/pond/getPonds",
+        "http://192.168.43.60:5050/api/v1/pond/getPonds",
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setPonds(response.data);
@@ -131,7 +131,7 @@ export default function Pond({ navigation }) {
       }
 
       await axios.put(
-        `https://fram-khatak.onrender.com/api/v1/pond/updateTestDate/${pondId}`,
+        `http://192.168.43.60:5050/api/v1/pond/updateTestDate/${pondId}`,
         { lastTestDate: newLastTestDate.toISOString() },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -204,7 +204,7 @@ export default function Pond({ navigation }) {
 
       if (isEditing) {
         await axios.put(
-          `https://fram-khatak.onrender.com/api/v1/pond/update/${pondId}`,
+          `http://192.168.43.60:5050/api/v1/pond/update/${pondId}`,
           newPond,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -212,7 +212,7 @@ export default function Pond({ navigation }) {
         setIsEditing(false);
       } else {
         const response = await axios.post(
-          "https://fram-khatak.onrender.com/api/v1/pond/create",
+          "http://192.168.43.60:5050/api/v1/pond/create",
           newPond,
           {
             headers: {
@@ -306,7 +306,7 @@ export default function Pond({ navigation }) {
                 return;
               }
               await axios.delete(
-                `https://fram-khatak.onrender.com/api/v1/pond/delete/${pondToDelete._id}`,
+                `http://192.168.43.60:5050/api/v1/pond/delete/${pondToDelete._id}`,
                 { headers: { Authorization: `Bearer ${token}` } }
               );
               fetchPonds();

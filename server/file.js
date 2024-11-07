@@ -12,7 +12,7 @@ const port = 5000;
 app.use(cors());
 app.use(bodyParser.json());
 
-mongoose.connect('mongodb://localhost:27017/ponds', {
+mongoose.connect('mongodb://192.168.43.60:27017/ponds', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });

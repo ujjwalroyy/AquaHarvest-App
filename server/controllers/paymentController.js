@@ -51,7 +51,7 @@ export const paymentVerification = async (req, res, next) => {
         const generated_signature= crypto.createHmac("sha256", process.env.RAZORPAY_API_SECRET).update(razorpay_payment_id + "|"+subscription_id, "utf-8").digest("hex")
         
         const isAuthentic = generated_signature === razorpay_signature;
-        if(!isAuthentic) return res.redirect(`http://localhost:8081`)
+        if(!isAuthentic) return res.redirect(`http://192.168.43.60:8081`)
 
         await Payment.create({
             razorpay_signature,

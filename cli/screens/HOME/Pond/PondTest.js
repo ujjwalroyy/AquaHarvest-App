@@ -53,7 +53,7 @@ export default function PondTest({ navigation, route }) {
     };
 
     try {
-      const response = await axios.post('https://fram-khatak.onrender.com/api/v1/pond-test', testData);
+      const response = await axios.post('http://192.168.43.60:5050/api/v1/pond-test', testData);
       setLoading(false);
       Alert.alert('Success', 'Sampling data saved successfully');
       navigation.navigate("PondReport", response.data.newPondTest);

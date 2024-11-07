@@ -7,6 +7,7 @@ import twilio from 'twilio';
 import dotenv from 'dotenv'
 import passport from '../config/auth.js'
 import TempOtpModel from "../utils/TempOtp.js";
+import axios from "axios";
 
 dotenv.config();
 
@@ -80,13 +81,27 @@ async function sendOTPPhoneNumber(userPhone, otp) {
     throw error;
   }
 }
+async function sendOTPPhoneNumberRegister(userPhone, otp) {
+  try {
+    const username = process.env.SMS_API_USERNAME;
+    const password = process.env.SMS_API_PASSWORD;    
+    const apiUrl = `http://web.smsgw.in/smsapi/httpapi.jsp?username=${username}&password=${password}&from=CENUNI&to=${userPhone}&text=Dear Candidate, Your verification code is: ${otp}, Use the following code to verify your account. Centurion University&coding=0&pe_id=1001349507132979670&template_id=1007921784252726317`;
+    
+    const response = await axios.get(apiUrl);
+    console.log('OTP sent successfully:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error sending OTP:', error);
+    throw error;
+  }
+}
 
 
 export const registerController = async (req, res) => {
   try {
     const { name, email, password, phone } = req.body;
     
-    if (!name || !email || !password || !phone) {
+    if (!name || !password || !phone) {
       return res.status(400).json({
         success: false,
         message: "Please provide all required fields.",
@@ -101,11 +116,19 @@ export const registerController = async (req, res) => {
       });
     }
 
+    const existingTempUser = await TempUserModel.findOne({ email });
+    if (existingTempUser) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP has already been sent to this email. Please verify or wait for the OTP to expire.",
+      });
+    }
+
     const otp = generateOTP();
-    console.log("generate otp: ", otp)
+    console.log("Generated OTP: ", otp);
 
     try {
-      await sendOTPPhoneNumber(phone, otp);
+      await sendOTPPhoneNumberRegister(phone, otp);
       console.log(`OTP sent to ${phone}`);
 
       await TempUserModel.create({
@@ -114,7 +137,7 @@ export const registerController = async (req, res) => {
         password,
         phone,
         otp,
-        otpExpires: Date.now() + 10 * 60 * 1000, 
+        otpExpires: Date.now() + 5 * 60 * 1000, 
       });
 
       res.status(200).json({
@@ -137,6 +160,7 @@ export const registerController = async (req, res) => {
     });
   }
 };
+
 
 export const verifyForgetOtpController = async (req, res) => {
   try {
@@ -518,7 +542,7 @@ export const updateProfilePic = async(req, res) => {
   }
 
       const file = getDataUri(req.file)
-      if (user.profilePic && user.profilePic.public_id) {
+      if (user.profilePic?.public_id) {
         await cloudinary.v2.uploader.destroy(user.profilePic.public_id);
       }
       const cdb = await cloudinary.v2.uploader.upload(file.content);
@@ -526,6 +550,7 @@ export const updateProfilePic = async(req, res) => {
         public_id: cdb.public_id,
         url: cdb.secure_url,
       };
+      console.log("Cloudinary upload response:", cdb);
       await user.save();
       res.status(200).send({
         success: true,
